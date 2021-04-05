@@ -1,0 +1,2 @@
+#requirement.txt
+● Specify all the dependencies(libraries and versions) on requirement.txt,
