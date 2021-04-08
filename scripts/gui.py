@@ -25,8 +25,13 @@ class Window(QMainWindow):
         self.button2.clicked.connect(self.clickExit)
 
     def clickedSelect(self):
-        self.label.setText("You pressed the button ;)")
         self.update()
+        self.button1.deleteLater()
+        self.New = SecondWin()
+        self.New.show()
+        # w = SecondWin()
+        # w.show()
+        # self.close()
 
     def clickExit(self):
         self.close()
@@ -34,7 +39,18 @@ class Window(QMainWindow):
     def update(self):
         self.label.adjustSize()
 
-#class SecondWin(QWidget):
+class SecondWin(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.initSecondUI()
+        self.setGeometry(500,500,600,600) #sets window to appear 500 pixels from the left and 500 from the top with a size of 600 x 600
+        self.setWindowTitle("Select Handwriting Recognition Model")
+
+    def initSecondUI(self):
+        self.label = QtWidgets.QLabel(self)
+        self.label.setText("This is a new window")
+        self.label.move(100,100)
+
 
 
 
