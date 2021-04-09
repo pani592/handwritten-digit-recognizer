@@ -1,9 +1,11 @@
 #script for gui interface
 
+# from pytorch import *
 from PyQt5 import QtWidgets
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QGridLayout
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QGridLayout, QProgressBar
 import sys
+import time
 
 class UI(QWidget):
     #best implementation in terms of dynamically changing window and creating new options
@@ -103,27 +105,57 @@ class UI(QWidget):
 class SecondWin(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setGeometry(600,600,300,300) #sets window to appear 500 pixels from the left and 500 from the top with a size of 600 x 600
+        self.setGeometry(600,600,500,300) #sets window to appear 600 pixels from the left and 600 from the top with a size of 300 x 300
         self.setWindowTitle("Select Handwriting Recognition Model") #sets title of the window
 
     def initModel1(self):
         '''
         Used for when model 1 is selected
         '''
+        self.bar = QProgressBar(self)
+        self.bar.setGeometry(10, 200, 515, 50)
         self.label = QtWidgets.QLabel(self)
         self.label.setText("You have selected Model 1")
-        self.label.move(80,80)
+        self.label.move(80,40)
         self.update()
+        self.b1 = QPushButton(self)
+        self.b1.setText("Download MNIST")
+        self.b1.setGeometry(35,260, 100, 30)
+        self.b2 = QPushButton(self)
+        self.b2.setText("Train Model")
+        self.b2.setGeometry(150,260, 100, 30)
+        self.b3 = QPushButton(self)
+        self.b3.setText("Test Model")
+        self.b3.setGeometry(265,260, 100, 30)
+        self.b4 = QPushButton(self)
+        self.b4.setText("Exit")
+        self.b4.setGeometry(380,260, 100, 30)
+        self.b4.clicked.connect(self.clickExit)
         self.show()
 
     def initModel2(self):
         '''
         Used for when model 2 is selected
         '''
+        self.bar = QProgressBar(self)
+        self.bar.setGeometry(10, 200, 515, 50)
         self.label = QtWidgets.QLabel(self)
         self.label.setText("You have selected Model 2")
-        self.label.move(80,80)
+        self.label.move(80,50)
         self.update()
+        self.b1 = QPushButton(self)
+        self.b1.setText("Download MNIST")
+        self.b1.setGeometry(35,260, 100, 30)
+        self.b2 = QPushButton(self)
+        self.b2.setText("Train Model")
+        self.b2.setGeometry(150,260, 100, 30)
+        self.b3 = QPushButton(self)
+        self.b3.setText("Test Model")
+        self.b3.setGeometry(265,260, 100, 30)
+        self.b4 = QPushButton(self)
+        self.b4.setText("Exit")
+        self.b4.setGeometry(380,260, 100, 30)
+        self.b4.clicked.connect(self.clickExit)
         self.show()
     
     def update(self):
@@ -132,6 +164,9 @@ class SecondWin(QMainWindow):
         Prevents text from being cropped out
         '''
         self.label.adjustSize()
+
+    def clickExit(self):
+        self.close()
 
 
 
