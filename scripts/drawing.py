@@ -4,38 +4,58 @@
 # Last update: 9 April
 
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget
-from PyQt5.QtCore import QSize
-from PyQt5.QtGui import QPainterPath, QPainter
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton
+from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtGui import QPainterPath, QPainter, QImage, QPen
 
 class Canvas(QWidget):
-    def __init__(self,parent=None):
-        QWidget.__init__(self, parent)
-        self.path = QPainterPath() # class that helps with drawing operations
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent)  # or instead use: super().__init__() 
+        self.image = QImage(400, 400, QImage.Format_RGB32)
+        self.blankCanvas()   # instantiate QPointerPath and sets white background
+        self.penWidth = 10   
+        self.penColour = Qt.black
 
-    # draw the path stored using QPainter class 
+    # Creates a White canvas for drawing
+    def blankCanvas(self):
+        self.path = QPainterPath()
+        self.image.fill(Qt.white)
+
+    # Called whenever widget needs to be repainted
     def paintEvent(self, event):
         painter = QPainter(self)
-        painter.drawPath(self.path)
+        painter.drawImage(event.rect(), self.image, self.rect())   
 
-    # When mouse is pressed, update path starting point
+    # Called when a mouse button is pressed (inside the widget) 
     def mousePressEvent(self, event):
         self.path.moveTo(event.pos())
-        self.update()
 
-    # When mouse is pressed, update path starting point
+    # Called when mouse moves with any mouse button (left or right or scroll) held down
     def mouseMoveEvent(self, event):
         self.path.lineTo(event.pos())
-        self.update()
+        painter = QPainter(self.image)   
+        painter.setPen(QPen(self.penColour, self.penWidth, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))  # setting style of pen during motion
+        painter.drawPath(self.path) # draw path
+        self.update()   # Call paintEvent function
 
-    # Recommended widget size property
+    # Widget size
     def sizeHint(self): 
         return QSize(400, 400)
+
+    # Change pen colour
+    def newPenColour(self, colour):
+        self.penColour = colour
+
+    # Change pen width
+    def newPenWidth(self, width):
+        self.penWidth = width
 
 # For testing purposes
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    drawer = Canvas()
-    drawer.show()
+    canvas = Canvas()
+    # canvas.newPenColour(Qt.blue)  # choose pen colour
+    # canvas.newPenWidth(4)         # choose width of pen
+    canvas.show()
     sys.exit(app.exec_())
 
