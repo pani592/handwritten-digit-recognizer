@@ -20,6 +20,7 @@ class Canvas(QWidget):
     def blankCanvas(self):
         self.path = QPainterPath()
         self.image.fill(Qt.white)
+        self.update()   # allows blankCanvas() to be used to clear canvas
 
     # Called whenever widget needs to be repainted
     def paintEvent(self, event):
@@ -53,9 +54,19 @@ class Canvas(QWidget):
 # For testing purposes
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    widget = QWidget()   # new widget to hold clear canvas button and potentially other buttons
+    widget.setLayout(QVBoxLayout())
+
     canvas = Canvas()
+    clearButton = QPushButton("Clear Canvas")
+
+    widget.layout().addWidget(canvas)
+    widget.layout().addWidget(clearButton)
+
+    clearButton.clicked.connect(canvas.blankCanvas)
+
     # canvas.newPenColour(Qt.blue)  # choose pen colour
     # canvas.newPenWidth(4)         # choose width of pen
-    canvas.show()
+    widget.show()
     sys.exit(app.exec_())
 
