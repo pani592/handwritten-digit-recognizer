@@ -140,9 +140,15 @@ def view_classify(img, ps):
     plt.tight_layout()
     plt.show()
 
-if __name__ == '__main__':
+def button_train():
+    for epoch in range(1,10):
+        train(epoch)
+    torch.save(model, './my_model_lin.pth')
+
+
+def model_run():
     since = time.time()
-    for epoch in range(1, 2):
+    for epoch in range(1, 10):
         epoch_start = time.time()
         train(epoch) # TRAIN
         m, s = divmod(time.time() - epoch_start, 60)

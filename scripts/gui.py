@@ -1,9 +1,9 @@
 #script for gui interface
 
-# from pytorch import *
+# from pytorch import button_train, test
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import *
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QGridLayout, QProgressBar
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QGridLayout, QProgressBar, QLineEdit, QHBoxLayout, QFrame
 import sys
 import time
 
@@ -23,7 +23,7 @@ class UI(QWidget):
         self.Exit.clicked.connect(self.clickExit) #connects to "clickExit"
 
         self.layout = QGridLayout() #Creates a grid layout where widgets can be added into a particular positon easily
-        # allows for automatic dynamic adjusting
+        # allows for automatic dynamic changes
         self.layout.addWidget(self.ModelSel, 0 , 0) #adds Model Selection button at (0,0) position
         self.layout.addWidget(self.Exit, 3, 0) #sets Exit to be on the 3rd row but does not have a have a gap until button1 and button2 are added in rows 1 and 2
 
@@ -40,15 +40,137 @@ class UI(QWidget):
         self.layout.itemAt(0).widget().deleteLater()
 
     def Model1(self):
-        self.NewWin1 = SecondWin()
+        self.NewWin1 = SecWin()
         self.NewWin1.initModel1()
     
     def Model2(self):
-        self.NewWin2 = SecondWin()
+        self.NewWin2 = SecWin()
         self.NewWin2.initModel2()
 
     def clickExit(self):
         self.close()
+
+
+
+#Originally meant for second window to give model selection options, will be repurposed to show model training progress
+class SecondWin(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setGeometry(600,600,500,300) #sets window to appear 600 pixels from the left and 600 from the top with a size of 300 x 300
+        self.box = QFrame(self)
+        self.box.setGeometry(25,25, 450, 165)
+        self.box.setStyleSheet("border: 1px solid black;")
+        self.bar = QProgressBar(self)
+        self.bar.setGeometry(10, 200, 515, 50)
+        self.b2 = QPushButton(self)
+        self.b2.setText("Train Model")
+        self.b2.setGeometry(25,260, 100, 30)
+        self.b3 = QPushButton(self)
+        self.b3.setText("Test Model")
+        self.b3.setGeometry(210,260, 100, 30)
+        self.b4 = QPushButton(self)
+        self.b4.setText("Exit")
+        self.b4.setGeometry(380,260, 100, 30)
+        self.b4.clicked.connect(self.clickExit)
+
+    def initModel1(self):
+        '''
+        Used for when model 1 is selected
+        '''
+        self.setWindowTitle("Model 1") #sets title of the window
+        self.b2.clicked.connect(self.train_model1)
+        self.show()
+
+    def train_model1(self):
+        # button_train()
+        self.label = QtWidgets.QLabel(self)
+        self.label.setText("Model is being trained")
+        self.update()
+
+    def initModel2(self):
+        '''
+        Used for when model 2 is selected
+        '''
+        self.setWindowTitle("Model 2") #sets title of the window
+        self.show()
+    
+    def update(self):
+        '''
+        Updates the label to adjust based on the current text 
+        Prevents text from being cropped out
+        '''
+        self.label.adjustSize()
+
+    def clickExit(self):
+        self.close()
+
+class SecWin(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setGeometry(600,600,500,300) #sets window to appear 600 pixels from the left and 600 from the top with a size of 300 x 300
+        self.layout = QGridLayout()
+        self.box = QFrame(self)
+        # self.box.setGeometry(25,25, 450, 165)
+        self.box.setStyleSheet("border: 1px solid black;")
+        self.box.resize(450, 165)
+        self.box.move(25,25)
+        self.bar = QProgressBar(self)
+        self.bar.resize(485,50)
+        self.bar.move(25, 200)
+        # self.bar.setGeometry(10, 200, 515, 50)
+        self.b2 = QPushButton("Train Model")
+        # self.b2.setGeometry(25,260, 100, 30)
+        self.b3 = QPushButton("Test Model")
+        # self.b3.setGeometry(210,260, 100, 30)
+        self.b4 = QPushButton("Exit")
+        # self.b4.setGeometry(380,260, 100, 30)
+        self.layout.addWidget(self.box, 0, 0)
+        self.layout.addWidget(self.bar, 0, 1)
+        self.layout.addWidget(self.b2, 0, 2)
+        self.layout.addWidget(self.b3, 0, 3)
+        self.layout.addWidget(self.b4, 0, 4)
+        self.b4.clicked.connect(self.clickExit)
+
+    def initModel1(self):
+        '''
+        Used for when model 1 is selected
+        '''
+        self.setWindowTitle("Model 1") #sets title of the window
+        self.b2.clicked.connect(self.train_model1)
+        self.show()
+
+    def train_model1(self):
+        # button_train()
+        self.label = QtWidgets.QLabel(self)
+        self.label.setText("Model is being trained")
+        self.update()
+
+    def initModel2(self):
+        '''
+        Used for when model 2 is selected
+        '''
+        self.setWindowTitle("Model 2") #sets title of the window
+        self.show()
+    
+    def update(self):
+        '''
+        Updates the label to adjust based on the current text 
+        Prevents text from being cropped out
+        '''
+        self.label.adjustSize()
+
+    def clickExit(self):
+        self.close()
+
+
+
+def window():
+    app = QApplication(sys.argv)
+    win = UI()
+    win.show()
+    sys.exit(app.exec_())
+
+window()
 
 # Initial implementation of UI with a basic starting page
 # class Window(QMainWindow):
@@ -100,82 +222,3 @@ class UI(QWidget):
 
 #     def update(self):
 #         self.label.adjustSize()
-
-#Originally meant for second window to give model selection options, will be repurposed to show model training progress
-class SecondWin(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setGeometry(600,600,500,300) #sets window to appear 600 pixels from the left and 600 from the top with a size of 300 x 300
-        self.setWindowTitle("Select Handwriting Recognition Model") #sets title of the window
-
-    def initModel1(self):
-        '''
-        Used for when model 1 is selected
-        '''
-        self.bar = QProgressBar(self)
-        self.bar.setGeometry(10, 200, 515, 50)
-        self.label = QtWidgets.QLabel(self)
-        self.label.setText("You have selected Model 1")
-        self.label.move(80,40)
-        self.update()
-        self.b1 = QPushButton(self)
-        self.b1.setText("Download MNIST")
-        self.b1.setGeometry(35,260, 100, 30)
-        self.b2 = QPushButton(self)
-        self.b2.setText("Train Model")
-        self.b2.setGeometry(150,260, 100, 30)
-        self.b3 = QPushButton(self)
-        self.b3.setText("Test Model")
-        self.b3.setGeometry(265,260, 100, 30)
-        self.b4 = QPushButton(self)
-        self.b4.setText("Exit")
-        self.b4.setGeometry(380,260, 100, 30)
-        self.b4.clicked.connect(self.clickExit)
-        self.show()
-
-    def initModel2(self):
-        '''
-        Used for when model 2 is selected
-        '''
-        self.bar = QProgressBar(self)
-        self.bar.setGeometry(10, 200, 515, 50)
-        self.label = QtWidgets.QLabel(self)
-        self.label.setText("You have selected Model 2")
-        self.label.move(80,50)
-        self.update()
-        self.b1 = QPushButton(self)
-        self.b1.setText("Download MNIST")
-        self.b1.setGeometry(35,260, 100, 30)
-        self.b2 = QPushButton(self)
-        self.b2.setText("Train Model")
-        self.b2.setGeometry(150,260, 100, 30)
-        self.b3 = QPushButton(self)
-        self.b3.setText("Test Model")
-        self.b3.setGeometry(265,260, 100, 30)
-        self.b4 = QPushButton(self)
-        self.b4.setText("Exit")
-        self.b4.setGeometry(380,260, 100, 30)
-        self.b4.clicked.connect(self.clickExit)
-        self.show()
-    
-    def update(self):
-        '''
-        Updates the label to adjust based on the current text 
-        Prevents text from being cropped out
-        '''
-        self.label.adjustSize()
-
-    def clickExit(self):
-        self.close()
-
-
-
-
-
-def window():
-    app = QApplication(sys.argv)
-    win = UI()
-    win.show()
-    sys.exit(app.exec_())
-
-window()
