@@ -13,7 +13,7 @@ class Canvas(QWidget):
         QWidget.__init__(self, parent)  # or instead use: super().__init__() 
         self.image = QImage(400, 400, QImage.Format_RGB32)
         self.blankCanvas()   # instantiate QPointerPath and sets white background
-        self.penWidth = 10   
+        self.penWidth = 40   
         self.penColour = Qt.black
 
     # Creates a White canvas for drawing
@@ -51,6 +51,13 @@ class Canvas(QWidget):
     def newPenWidth(self, width):
         self.penWidth = width
 
+    def saveImage(self, widget):
+        screen = QApplication.primaryScreen()
+        screenshot = screen.grabWindow(widget.winId())
+        screenshot.save('shot.jpg', 'jpg')
+    
+
+
 # For testing purposes
 if __name__ == '__main__':
     app = QApplication(sys.argv)
@@ -59,14 +66,16 @@ if __name__ == '__main__':
 
     canvas = Canvas()
     clearButton = QPushButton("Clear Canvas")
+    captureButton = QPushButton('Save Image')
 
     widget.layout().addWidget(canvas)
     widget.layout().addWidget(clearButton)
+    widget.layout().addWidget(captureButton)
 
     clearButton.clicked.connect(canvas.blankCanvas)
+    captureButton.clicked.connect(lambda: canvas.saveImage(widget)) 
 
     # canvas.newPenColour(Qt.blue)  # choose pen colour
     # canvas.newPenWidth(4)         # choose width of pen
     widget.show()
     sys.exit(app.exec_())
-
