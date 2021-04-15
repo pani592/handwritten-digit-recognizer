@@ -2,13 +2,14 @@
 # Last updated: 15 April
 
 from __future__ import print_function
-from torch import nn, optim, cuda
+from torch import nn, optim, cuda, Tensor
 from torch.utils import data
 from torchvision import datasets, transforms
 import torch.nn.functional as F
 import time
 import matplotlib.pyplot as plt
 import torch
+import numpy as np
 
 # Run on GPU if available
 device = 'cuda' if cuda.is_available() else 'cpu'
@@ -32,7 +33,8 @@ test_loader = data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuff
 # for showing training and test data sets
 examples = iter(train_loader)
 samples,labels = examples.next()
-print(samples.shape, labels.shape)  # samples: torch.Size([64, 1, 28, 28]) labels: torch.Size([64]) - Note: 64 because of batch size = 64.
+# print(samples.shape, labels.shape)  # samples: torch.Size([64, 1, 28, 28]) labels: torch.Size([64]) - Note: 64 because of batch size = 64.
+# print(samples[0])
 
 # num_of_images = 60
 # for index in range(num_of_images):
@@ -58,29 +60,30 @@ class NeuralNet(nn.Module):
         x = F.relu(self.l4(x))
         return self.l5(x)
 
-# Covolutional Model (more accurate)
-class ConvNet(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = nn.Conv2d(1, 10, 5) #  1 input channels, 10 output channels, 5 core size
-        self.conv2 = nn.Conv2d(10, 20, 3) # 10 input channels, 20 output channels, 3 core size 
-        self.fc1 = nn.Linear(20*10*10, 500) # 2000 input channels, 500 output channels
-        self.fc2 = nn.Linear(500, 10) # 500 input channels, 10 output channels
-    def forward(self,x):
-        in_size = x.size(0) # in_size= value of BATCH_SIZE. The input x can be regarded as a tensor of n*1*28*28.
-        x = F.relu(self.conv1(x)) # batch*1*28*28 -> batch*10*24*24 (28x28 image undergoes a convolution with a core of 5x5, and the output becomes 24x24)
-        x = F.max_pool2d(x, 2, 2) # batch*10*24*24 -> batch*10*12*12 (2*2 pooling layer will be halved)
-        x = F.relu(self.conv2(x)) # batch*10*12*12 -> batch*20*10*10 
-        x = x.view(in_size, -1) # batch*20*10*10 -> batch*2000 
-        x = F.relu(self.fc1(x)) # batch*2000 -> batch*500
-        return F.log_softmax(self.fc2(x), dim=1) # batch*500 -> batch*10
+# # Covolutional Model (more accurate but not currently using)
+# class ConvNet(nn.Module):
+#     def __init__(self):
+#         super().__init__()
+#         self.conv1 = nn.Conv2d(1, 10, 5) #  1 input channels, 10 output channels, 5 core size
+#         self.conv2 = nn.Conv2d(10, 20, 3) # 10 input channels, 20 output channels, 3 core size 
+#         self.fc1 = nn.Linear(20*10*10, 500) # 2000 input channels, 500 output channels
+#         self.fc2 = nn.Linear(500, 10) # 500 input channels, 10 output channels
+#     def forward(self,x):
+#         in_size = x.size(0) # in_size= value of BATCH_SIZE. The input x can be regarded as a tensor of n*1*28*28.
+#         x = F.relu(self.conv1(x)) # batch*1*28*28 -> batch*10*24*24 (28x28 image undergoes a convolution with a core of 5x5, and the output becomes 24x24)
+#         x = F.max_pool2d(x, 2, 2) # batch*10*24*24 -> batch*10*12*12 (2*2 pooling layer will be halved)
+#         x = F.relu(self.conv2(x)) # batch*10*12*12 -> batch*20*10*10 
+#         x = x.view(in_size, -1) # batch*20*10*10 -> batch*2000 
+#         x = F.relu(self.fc1(x)) # batch*2000 -> batch*500
+#         return F.log_softmax(self.fc2(x), dim=1) # batch*500 -> batch*10
 
 # intialise model, define loss and optimiser
-# model = NeuralNet(input_size, hidden_size, num_classes).to(device)
-model = ConvNet().to(device)
+model = NeuralNet(input_size, num_classes).to(device)
+# model = ConvNet().to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)  # mom originally 0.5. Could use Adam but SGD is better.
 
+# Training
 def train(epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -94,6 +97,7 @@ def train(epoch):
             print('Train Epoch: {} | Batch Status: {}/{} ({:.0f}%) | Loss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset), 100. * batch_idx / len(train_loader), loss.item()))
 
+# Testing
 def test():
     model.eval()
     test_loss = 0
@@ -109,6 +113,32 @@ def test():
     print(f'===========================\nTest set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} '
           f'({100. * correct / len(test_loader.dataset):.0f}%)')
 
+##########  ##########
+
+# Attempts to make a prediction for just ONE image
+def predict(tensor, model):
+    tensor = tensor.to(device)
+    # make prediction
+    output = model(tensor.float()) 
+    index = output.data.cpu().numpy().argmax()
+    return index
+
+# function from online that helps to plot graph - however not working (probabilities not under 1!)
+def view_classify(img, ps):
+    ''' Function for viewing an image and it's predicted classes.'''
+    ps = ps.cpu().numpy().squeeze()
+
+    fig, (ax1, ax2) = plt.subplots(figsize=(6,9), ncols=2)
+    ax1.imshow(img.cpu().resize_(1, 28, 28).numpy().squeeze())
+    ax1.axis('off')
+    ax2.barh(np.arange(10), ps)
+    ax2.set_aspect(0.1)
+    ax2.set_yticks(np.arange(10))
+    ax2.set_yticklabels(np.arange(10))
+    ax2.set_title('Class Probability')
+    ax2.set_xlim(0, 1.1)
+    plt.tight_layout()
+    plt.show()
 
 if __name__ == '__main__':
     since = time.time()
@@ -124,5 +154,20 @@ if __name__ == '__main__':
     m, s = divmod(time.time() - since, 60)
     print(f'Total Time: {m:.0f}m {s:.0f}s\nModel was trained on {device}!')
 
-    #Save the model after training
-    # torch.save(model, './my_model.pth')
+    # Save the model after training
+    torch.save(model, './my_model_lin.pth')  # this also could be wrong - the point is to save model so you don't have to retrain each time.
+
+
+    ############################# bbelow is TESTING, not sure if working properly #############
+    images, labels = next(iter(test_loader))
+    img = images[10].view(1, 784)
+    print(img.shape)
+    print(img.size)
+    print(img.dtype)
+    img = img.to(device) # gpu or cpu
+    with torch.no_grad():
+        logps = model(img)
+    ps = torch.exp(logps)
+    probab = list(ps.data.cpu().numpy()[0])
+    print("Predicted Digit =", probab.index(max(probab)))
+    view_classify(img.view(1, 28, 28), ps)

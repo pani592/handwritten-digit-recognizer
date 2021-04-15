@@ -55,7 +55,7 @@ class Canvas(QWidget):
         self.penWidth = width
 
     def saveImage(self):
-        # self.image.save('digit.jpg', 'jpg')   #  directly save qimage to jpg
+        self.image.save('digit.jpg', 'jpg')   #  directly save qimage to jpg
         # or using PIL to manipulate image before save:
         image = ImageQt.fromqimage(self.image)
         image = image.convert('L')  # ensure grayscale
@@ -67,14 +67,11 @@ class Canvas(QWidget):
 
         image_array = np.array(img_28x28) # 28 x 28 
         image_array = (image_array.flatten())  # array len 784
-        image_array  = image_array.reshape(-1,1).T  # shape is 1 X 784 now, not sure if reqd.
+        # image_array  = image_array.reshape(-1,1).T  # shape is 1 X 784 now, not sure if reqd.
         image_array = image_array.astype('float32')
         image_array /= 255 
+        # this image array will be input into the machine learning model.
 
-        print(image_array)
-
-
-    
 # For testing purposes
 if __name__ == '__main__':
     app = QApplication(sys.argv)
@@ -96,9 +93,3 @@ if __name__ == '__main__':
     # canvas.newPenWidth(4)         # choose width of pen
     widget.show()
     sys.exit(app.exec_())
-
-    # Older code, don't remove yet incase its needed.
-    # def capture_Screen(widget):
-    #     screen = QApplication.primaryScreen()
-    #     screenshot = screen.grabWindow(widget.winId())
-    #     screenshot.save('shot.jpg', 'jpg')
