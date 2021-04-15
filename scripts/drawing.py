@@ -8,12 +8,15 @@ from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QPainterPath, QPainter, QImage, QPen
 
+import numpy as np
+from PIL import Image, ImageQt, ImageOps
+
 class Canvas(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)  # or instead use: super().__init__() 
-        self.image = QImage(400, 400, QImage.Format_RGB32)
+        self.image = QImage(400, 400, QImage.Format_Grayscale8)   # initially did Format_RGB32 but MNIST is 8bit grayscale so this improves accuracy.
         self.blankCanvas()   # instantiate QPointerPath and sets white background
-        self.penWidth = 40   
+        self.penWidth = 40   # large pen width for better accuracy
         self.penColour = Qt.black
 
     # Creates a White canvas for drawing
@@ -52,7 +55,25 @@ class Canvas(QWidget):
         self.penWidth = width
 
     def saveImage(self):
-        self.image.save('shot.jpg', 'jpg')
+        # self.image.save('digit.jpg', 'jpg')   #  directly save qimage to jpg
+        # or using PIL to manipulate image before save:
+        image = ImageQt.fromqimage(self.image)
+        image = image.convert('L')  # ensure grayscale
+        image = ImageOps.invert(image)  # invert colour
+        image.save('digit_inv.jpg')
+
+        img_28x28 = image.resize((28, 28), Image.ANTIALIAS)
+        img_28x28.save('digit_inv_28x28.jpg')
+
+        image_array = np.array(img_28x28) # 28 x 28 
+        image_array = (image_array.flatten())  # array len 784
+        image_array  = image_array.reshape(-1,1).T  # shape is 1 X 784 now, not sure if reqd.
+        image_array = image_array.astype('float32')
+        image_array /= 255 
+
+        print(image_array)
+
+
     
 # For testing purposes
 if __name__ == '__main__':
