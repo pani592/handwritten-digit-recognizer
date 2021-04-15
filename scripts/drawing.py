@@ -51,13 +51,9 @@ class Canvas(QWidget):
     def newPenWidth(self, width):
         self.penWidth = width
 
-    def saveImage(self, widget):
-        screen = QApplication.primaryScreen()
-        screenshot = screen.grabWindow(widget.winId())
-        screenshot.save('shot.jpg', 'jpg')
+    def saveImage(self):
+        self.image.save('shot.jpg', 'jpg')
     
-
-
 # For testing purposes
 if __name__ == '__main__':
     app = QApplication(sys.argv)
@@ -73,9 +69,15 @@ if __name__ == '__main__':
     widget.layout().addWidget(captureButton)
 
     clearButton.clicked.connect(canvas.blankCanvas)
-    captureButton.clicked.connect(lambda: canvas.saveImage(widget)) 
+    captureButton.clicked.connect(lambda: canvas.saveImage()) 
 
     # canvas.newPenColour(Qt.blue)  # choose pen colour
     # canvas.newPenWidth(4)         # choose width of pen
     widget.show()
     sys.exit(app.exec_())
+
+    # Older code, don't remove yet incase its needed.
+    # def capture_Screen(widget):
+    #     screen = QApplication.primaryScreen()
+    #     screenshot = screen.grabWindow(widget.winId())
+    #     screenshot.save('shot.jpg', 'jpg')
