@@ -126,13 +126,13 @@ class SecWin(QWidget):
         self.b2 = QPushButton("Train Model")
         self.b3 = QPushButton("Test Model")
         self.b4 = QPushButton("Exit")
-        button_layout = QHBoxLayout()
-        button_layout.addWidget(self.b2)
-        button_layout.addWidget(self.b3)
-        button_layout.addWidget(self.b4)
+        self.button_layout = QHBoxLayout(self)
+        self.button_layout.addWidget(self.b2)
+        self.button_layout.addWidget(self.b3)
+        self.button_layout.addWidget(self.b4)
         self.Vlayout.addWidget(self.box)
         self.Vlayout.addWidget(self.bar)
-        self.Vlayout.addLayout(button_layout)
+        self.Vlayout.addLayout(self.button_layout)
         self.b4.clicked.connect(self.clickExit)
 
     def initModel1(self):
@@ -141,22 +141,44 @@ class SecWin(QWidget):
         '''
         self.setWindowTitle("Model 1") #sets title of the window
         self.b2.clicked.connect(self.train_model1)
+        self.b3.clicked.connect(self.test_model1)
         self.show()
 
     def train_model1(self):
         label_train = QtWidgets.QLabel("Model is being trained...")
         box_text.addWidget(label_train)
         self.box.setLayout(box_text)
-        self.thread = TaskThread()
-        self.thread.task_fin.connect(self.setValue)
-        self.thread.start()
-        self.box.setLayout(box_text)
+        self.train_thread1 = TrainThread1()
+        self.train_thread1.task_fin.connect(self.setValue)
+        self.train_thread1.start()
+        self.train_thread1.finished.connect(self.updateTrain1)
 
     def setValue(self, value):
         self.bar.setValue(value)
 
-    def updateBoxText(self):
+    def updateTrain1(self):
+        label_train_cmp = QtWidgets.QLabel("Model training is complete.")
+        box_text.addWidget(label_train_cmp)
         self.box.setLayout(box_text)
+    
+    def test_model1(self):
+        label_test = QtWidgets.QLabel("Model is being tested...")
+        box_text.addWidget(label_test)
+        self.box.setLayout(box_text)
+        self.test_thread1 = TestThread1()
+        self.test_thread1.task_fin.connect(self.setValue)
+        self.test_thread1.start()
+        self.test_thread1.finished.connect(self.updateTest1)
+
+    def updateTest1(self):
+        global Accuracy1
+        label_test_cmp = QLabel("Model testing is complete. Accuracy: %0.2f%% " % Accuracy1)
+        box_text.addWidget(label_test_cmp)
+        self.box.setLayout(box_text)
+        self.button_layout.itemAt(0).widget().deleteLater()
+        self.button_layout.itemAt(1).widget().deleteLater()
+        self.b5 = QPushButton("Drawing Canvas")
+        self.button_layout.insertWidget(0,self.b5)
 
     def initModel2(self):
         '''
@@ -175,7 +197,7 @@ class SecWin(QWidget):
     def clickExit(self):
         self.close()
 
-class TaskThread(QThread):
+class TrainThread1(QThread):
     task_fin = pyqtSignal(int)
 
     def run(self):
@@ -186,10 +208,19 @@ class TaskThread(QThread):
             time.sleep(0.3)
             self.task_fin.emit(count*10)
         torch.save(model, './my_model_lin.pth')
-        label_train_cmp = QtWidgets.QLabel("Model training is complete.")
-        box_text.addWidget(label_train_cmp)
-        SecWin.updateBoxText(SecWin)
-        
+
+Accuracy1 = 0     
+class TestThread1(QThread):
+    task_fin = pyqtSignal(int)
+
+    def run(self):
+        for epoch in range(1,11):
+            global Accuracy1
+            tmp_acc = test()
+            if epoch == 10:
+                Accuracy1 = tmp_acc*100
+            time.sleep(0.2)
+            self.task_fin.emit(90+epoch)
 
 def window():
     app = QApplication(sys.argv)

@@ -13,7 +13,7 @@ import numpy as np
 
 # Run on GPU if available
 device = 'cuda' if cuda.is_available() else 'cpu'
-print(f'Training MNIST Model on {device}\n{"=" * 44}')
+# print(f'Training MNIST Model on {device}\n{"=" * 44}')
 
 # Training settings
 input_size = 784 # 28x28 image size
@@ -110,8 +110,9 @@ def test():
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
     test_loss /= len(test_loader.dataset)
-    print(f'===========================\nTest set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} '
-          f'({100. * correct / len(test_loader.dataset):.0f}%)')
+    return correct/len(test_loader.dataset)
+    # print(f'===========================\nTest set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} '
+    #       f'({100. * correct / len(test_loader.dataset):.0f}%)')
 
 ##########  ##########
 
@@ -139,11 +140,6 @@ def view_classify(img, ps):
     ax2.set_xlim(0, 1.1)
     plt.tight_layout()
     plt.show()
-
-def button_train():
-    for epoch in range(1,10):
-        train(epoch)
-    torch.save(model, './my_model_lin.pth')
 
 
 def model_run():
