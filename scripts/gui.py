@@ -4,8 +4,7 @@ from pytorch import *
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import *
 from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5 import Qt
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QGridLayout, QProgressBar, QLineEdit, QHBoxLayout, QFrame
 import sys
 import time
@@ -109,7 +108,7 @@ class SecondWin(QMainWindow):
         self.close()
 
 box_text = QVBoxLayout()
-box_text.setAlignment(QtCore.Qt.AlignTop)
+box_text.setAlignment(Qt.AlignTop)
 
 class SecWin(QWidget):
     def __init__(self):
@@ -119,12 +118,11 @@ class SecWin(QWidget):
         self.setLayout(self.Vlayout)
         self.box = QtWidgets.QFrame(self) 
         self.box.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
-        # box_text = QVBoxLayout()
         progress_label = QtWidgets.QLabel("Progress:")
         box_text.addWidget(progress_label)
-        # box_text.addStretch()
         self.box.setLayout(box_text)
         self.bar = QProgressBar(self)
+        self.bar.setMaximum(100)
         self.b2 = QPushButton("Train Model")
         self.b3 = QPushButton("Test Model")
         self.b4 = QPushButton("Exit")
@@ -146,16 +144,19 @@ class SecWin(QWidget):
         self.show()
 
     def train_model1(self):
-        # button_train()
         label_train = QtWidgets.QLabel("Model is being trained...")
-        # self.update()
         box_text.addWidget(label_train)
-        # box_text.addStretch()
         self.box.setLayout(box_text)
-        for epoch in range(1,10):
-            train(epoch)
-            self.bar.setValue(80)
-        torch.save(model, './my_model_lin.pth')
+        self.thread = TaskThread()
+        self.thread.task_fin.connect(self.setValue)
+        self.thread.start()
+        self.box.setLayout(box_text)
+
+    def setValue(self, value):
+        self.bar.setValue(value)
+
+    def updateBoxText(self):
+        self.box.setLayout(box_text)
 
     def initModel2(self):
         '''
@@ -174,7 +175,21 @@ class SecWin(QWidget):
     def clickExit(self):
         self.close()
 
+class TaskThread(QThread):
+    task_fin = pyqtSignal(int)
 
+    def run(self):
+        count = 0
+        for epoch in range(1,10):
+            count += 1
+            train(epoch)
+            time.sleep(0.3)
+            self.task_fin.emit(count*10)
+        torch.save(model, './my_model_lin.pth')
+        label_train_cmp = QtWidgets.QLabel("Model training is complete.")
+        box_text.addWidget(label_train_cmp)
+        SecWin.updateBoxText(SecWin)
+        
 
 def window():
     app = QApplication(sys.argv)
@@ -183,54 +198,3 @@ def window():
     sys.exit(app.exec_())
 
 window()
-
-# Initial implementation of UI with a basic starting page
-# class Window(QMainWindow):
-#     def __init__(self):
-#         super(Window, self).__init__()
-#         self.initUI()
-#         self.setGeometry(500,500,600,600) #sets window to appear 500 pixels from the left and 500 from the top with a size of 600 x 600
-#         self.setWindowTitle("Handwritten Digit Recognizer")
-    
-#     def initUI(self):
-#         self.label = QtWidgets.QLabel(self)
-#         self.label.setText("No press")
-#         self.label.move(100,100)
-#         self.button1 = QtWidgets.QPushButton(self)
-#         self.button1.setGeometry(250,200, 100, 40)
-#         self.button1.setText("Select Model")
-#         self.button1.clicked.connect(self.clickedSelect)
-#         self.button2 = QtWidgets.QPushButton(self)
-#         self.button2.setGeometry(250, 250, 100, 40)
-#         self.button2.setText("Exit")
-#         self.button2.clicked.connect(self.clickExit)
-
-#     def clickedSelect(self):
-#         self.button1.deleteLater()
-#         self.label = QtWidgets.QLabel(self)
-#         self.label.setText("Please select a model from one of the below:")
-#         self.update()
-#         self.label.move(100,100)
-#         self.model1 = QtWidgets.QPushButton(self)
-#         self.model1.setGeometry(150,100, 200, 40)
-#         self.model1.setText("Model 1")
-#         self.model2 = QtWidgets.QPushButton(self)
-#         self.model2.setGeometry(150,150, 200, 40)
-#         self.model2.setText("Model 2")
-#         self.model3 = QtWidgets.QPushButton(self)
-#         self.model3.setGeometry(150,200, 200, 40)
-#         self.model3.setText("Model 3")
-        
-#         self.update()
-        
-#         self.New = SecondWin()
-#         self.New.show()
-#         w = SecondWin()
-#         w.show()
-#         self.close()
-
-#     def clickExit(self):
-#         self.close()
-
-#     def update(self):
-#         self.label.adjustSize()
