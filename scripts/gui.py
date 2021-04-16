@@ -1,11 +1,15 @@
 #script for gui interface
 
-# from pytorch import button_train, test
+from pytorch import *
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import *
+from PyQt5 import QtGui
+from PyQt5 import QtCore
+from PyQt5 import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QGridLayout, QProgressBar, QLineEdit, QHBoxLayout, QFrame
 import sys
 import time
+import torch
 
 class UI(QWidget):
     #best implementation in terms of dynamically changing window and creating new options
@@ -104,15 +108,22 @@ class SecondWin(QMainWindow):
     def clickExit(self):
         self.close()
 
+box_text = QVBoxLayout()
+box_text.setAlignment(QtCore.Qt.AlignTop)
+
 class SecWin(QWidget):
     def __init__(self):
         super().__init__()
         self.setGeometry(200,200,500,300) #sets window to appear 600 pixels from the left and 600 from the top with a size of 300 x 300
         self.Vlayout = QVBoxLayout(self)
         self.setLayout(self.Vlayout)
-        self.box = QFrame(self)
-        # self.box.setGeometry(25,25, 450, 165)
-        self.box.setStyleSheet("border: 1px solid black;")
+        self.box = QtWidgets.QFrame(self) 
+        self.box.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
+        # box_text = QVBoxLayout()
+        progress_label = QtWidgets.QLabel("Progress:")
+        box_text.addWidget(progress_label)
+        # box_text.addStretch()
+        self.box.setLayout(box_text)
         self.bar = QProgressBar(self)
         self.b2 = QPushButton("Train Model")
         self.b3 = QPushButton("Test Model")
@@ -136,10 +147,15 @@ class SecWin(QWidget):
 
     def train_model1(self):
         # button_train()
-        self.label = QtWidgets.QLabel(self)
-        self.label.setText("Model is being trained")
-        self.label.move()
-        self.update()
+        label_train = QtWidgets.QLabel("Model is being trained...")
+        # self.update()
+        box_text.addWidget(label_train)
+        # box_text.addStretch()
+        self.box.setLayout(box_text)
+        for epoch in range(1,10):
+            train(epoch)
+            self.bar.setValue(80)
+        torch.save(model, './my_model_lin.pth')
 
     def initModel2(self):
         '''
