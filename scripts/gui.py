@@ -13,7 +13,7 @@ class UI(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
-        self.setGeometry(500,500,300,300) #sets window to appear 500 pixels from the left and 500 from the top with a size of 600 x 600
+        self.setGeometry(150,150,300,300) #sets window to appear 500 pixels from the left and 500 from the top with a size of 600 x 600
         self.setWindowTitle("Handwritten Digit Recognizer")
 
     def initUI(self):
@@ -107,28 +107,23 @@ class SecondWin(QMainWindow):
 class SecWin(QWidget):
     def __init__(self):
         super().__init__()
-        self.setGeometry(600,600,500,300) #sets window to appear 600 pixels from the left and 600 from the top with a size of 300 x 300
-        self.layout = QGridLayout()
+        self.setGeometry(200,200,500,300) #sets window to appear 600 pixels from the left and 600 from the top with a size of 300 x 300
+        self.Vlayout = QVBoxLayout(self)
+        self.setLayout(self.Vlayout)
         self.box = QFrame(self)
         # self.box.setGeometry(25,25, 450, 165)
         self.box.setStyleSheet("border: 1px solid black;")
-        self.box.resize(450, 165)
-        self.box.move(25,25)
         self.bar = QProgressBar(self)
-        self.bar.resize(485,50)
-        self.bar.move(25, 200)
-        # self.bar.setGeometry(10, 200, 515, 50)
         self.b2 = QPushButton("Train Model")
-        # self.b2.setGeometry(25,260, 100, 30)
         self.b3 = QPushButton("Test Model")
-        # self.b3.setGeometry(210,260, 100, 30)
         self.b4 = QPushButton("Exit")
-        # self.b4.setGeometry(380,260, 100, 30)
-        self.layout.addWidget(self.box, 0, 0)
-        self.layout.addWidget(self.bar, 0, 1)
-        self.layout.addWidget(self.b2, 0, 2)
-        self.layout.addWidget(self.b3, 0, 3)
-        self.layout.addWidget(self.b4, 0, 4)
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self.b2)
+        button_layout.addWidget(self.b3)
+        button_layout.addWidget(self.b4)
+        self.Vlayout.addWidget(self.box)
+        self.Vlayout.addWidget(self.bar)
+        self.Vlayout.addLayout(button_layout)
         self.b4.clicked.connect(self.clickExit)
 
     def initModel1(self):
@@ -143,6 +138,7 @@ class SecWin(QWidget):
         # button_train()
         self.label = QtWidgets.QLabel(self)
         self.label.setText("Model is being trained")
+        self.label.move()
         self.update()
 
     def initModel2(self):
