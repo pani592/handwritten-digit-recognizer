@@ -1,6 +1,6 @@
 # This is only for testing
 from pytorch import *
-from drawing import *
+# from drawing import *
 import cv2 as cv
 from skimage.color import rgb2gray
 
@@ -13,7 +13,7 @@ tensor = torch.tensor(img)  # 2d tensor 28 x 28.
 tensor = tensor.flatten() # 1d tensor 784 length.
 
 yhat = predict(tensor,model)
-print(yhat)
+# print(yhat)
 
 # plt.imshow(img,cmap='gray')  
 # plt.show()
@@ -21,3 +21,12 @@ print(yhat)
 # print(img.shape)
 # print(img.size)
 # print(img.dtype)
+
+def recognize():
+    model = torch.load('my_model_lin.pth')
+    img = cv.imread('digit_inv_28x28.jpg')
+    img = rgb2gray(img)
+    tensor = torch.tensor(img)
+    tensor = tensor.flatten()
+    yhat = predict(tensor, model)
+    return yhat

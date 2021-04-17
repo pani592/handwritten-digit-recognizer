@@ -6,6 +6,7 @@ from PyQt5.QtGui import *
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QGridLayout, QProgressBar, QLineEdit, QHBoxLayout, QFrame
+from drawing import *
 import sys
 import time
 import torch
@@ -54,59 +55,6 @@ class UI(QWidget):
         self.close()
 
 
-
-#Originally meant for second window to give model selection options, will be repurposed to show model training progress
-class SecondWin(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setGeometry(600,600,500,300) #sets window to appear 600 pixels from the left and 600 from the top with a size of 300 x 300
-        self.box = QFrame(self)
-        self.box.setGeometry(25,25, 450, 165)
-        self.box.setStyleSheet("border: 1px solid black;")
-        self.bar = QProgressBar(self)
-        self.bar.setGeometry(10, 200, 515, 50)
-        self.b2 = QPushButton(self)
-        self.b2.setText("Train Model")
-        self.b2.setGeometry(25,260, 100, 30)
-        self.b3 = QPushButton(self)
-        self.b3.setText("Test Model")
-        self.b3.setGeometry(210,260, 100, 30)
-        self.b4 = QPushButton(self)
-        self.b4.setText("Exit")
-        self.b4.setGeometry(380,260, 100, 30)
-        self.b4.clicked.connect(self.clickExit)
-
-    def initModel1(self):
-        '''
-        Used for when model 1 is selected
-        '''
-        self.setWindowTitle("Model 1") #sets title of the window
-        self.b2.clicked.connect(self.train_model1)
-        self.show()
-
-    def train_model1(self):
-        # button_train()
-        self.label = QtWidgets.QLabel(self)
-        self.label.setText("Model is being trained")
-        self.update()
-
-    def initModel2(self):
-        '''
-        Used for when model 2 is selected
-        '''
-        self.setWindowTitle("Model 2") #sets title of the window
-        self.show()
-    
-    def update(self):
-        '''
-        Updates the label to adjust based on the current text 
-        Prevents text from being cropped out
-        '''
-        self.label.adjustSize()
-
-    def clickExit(self):
-        self.close()
-
 box_text = QVBoxLayout()
 box_text.setAlignment(Qt.AlignTop)
 
@@ -145,6 +93,7 @@ class SecWin(QWidget):
         self.show()
 
     def train_model1(self):
+        self.b2.setEnabled(False)
         label_train = QtWidgets.QLabel("Model is being trained...")
         box_text.addWidget(label_train)
         self.box.setLayout(box_text)
@@ -178,7 +127,12 @@ class SecWin(QWidget):
         self.button_layout.itemAt(0).widget().deleteLater()
         self.button_layout.itemAt(1).widget().deleteLater()
         self.b5 = QPushButton("Drawing Canvas")
+        self.b5.clicked.connect(self.drawingButton)
         self.button_layout.insertWidget(0,self.b5)
+
+    def drawingButton(self):
+        self.newCanvas = FullWindow()
+        self.newCanvas.initUI()
 
     def initModel2(self):
         '''

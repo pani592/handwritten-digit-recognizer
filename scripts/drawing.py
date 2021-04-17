@@ -4,8 +4,10 @@
 # Last update: 9 April
 
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton
-from PyQt5.QtCore import QSize, Qt
+from test_model import recognize
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QFrame
+from PyQt5.QtCore import QSize, Qt, pyqtSignal, QThread
 from PyQt5.QtGui import QPainterPath, QPainter, QImage, QPen
 
 import numpy as np
@@ -42,7 +44,7 @@ class Canvas(QWidget):
         painter.drawPath(self.path) # draw path
         self.update()   # Call paintEvent function
 
-    # Widget size
+    # # Widget size
     def sizeHint(self): 
         return QSize(400, 400)
 
@@ -71,25 +73,74 @@ class Canvas(QWidget):
         image_array = image_array.astype('float32')
         image_array /= 255 
         # this image array will be input into the machine learning model.
+        self.blankCanvas() #when image is saved, the canvas is cleared
+
+class FullWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setGeometry(200,200,700,400) #sets window to appear 600 pixels from the left and 600 from the top with a size of 300 x 300
+        self.Hlayout = QHBoxLayout(self)
+        self.setLayout(self.Hlayout)
+        self.canvas = Canvas()
+        self.numbox = QtWidgets.QFrame(self) 
+        self.numbox.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
+        self.number = QVBoxLayout(self)
+        self.number.setAlignment(Qt.AlignTop)
+        self.numbox.setLayout(self.number)
+        self.clearButton = QPushButton("Clear Canvas")
+        self.captureButton = QPushButton('Save Image')
+        self.recogButton = QPushButton('Recognize Number')
+        self.exit = QPushButton("Exit")
+        self.button_layout = QVBoxLayout(self)
+        self.button_layout.addWidget(self.clearButton)
+        self.button_layout.addWidget(self.captureButton)
+        self.button_layout.addWidget(self.recogButton)
+        self.button_layout.addWidget(self.numbox)
+        self.button_layout.addWidget(self.exit)
+        self.Hlayout.addWidget(self.canvas)
+        self.Hlayout.addLayout(self.button_layout)
+        self.clearButton.clicked.connect(self.clear)
+        self.captureButton.clicked.connect(self.capture)
+        self.recogButton.clicked.connect(self.recognizeButton)
+        self.exit.clicked.connect(self.clickExit)
+
+    def initUI(self):
+        self.show()
+
+    def clear(self):
+        self.canvas.blankCanvas()
+
+    def capture(self):
+        self.canvas.saveImage()
+
+    def recognizeButton(self):
+        self.recog = recogThread()
+        self.recog.start()
+        self.recog.finished.connect(self.updatePredict)
+
+    def updatePredict(self):
+        global predicted_num
+        pre_num = QtWidgets.QLabel("%d" % predicted_num)
+        self.number.addWidget(pre_num)
+        self.numbox.setLayout(self.number)
+
+
+
+    def clickExit(self):
+        self.close()
+
+predicted_num = 9999
+
+class recogThread(QThread):
+    task_fin = pyqtSignal(int)
+
+    def run(self):
+        global predicted_num
+        predicted_num = recognize()
 
 # For testing purposes
-if __name__ == '__main__':
+def drawingCanvas():
     app = QApplication(sys.argv)
-    widget = QWidget()   # new widget to hold clear canvas button and potentially other buttons
-    widget.setLayout(QVBoxLayout())
-
-    canvas = Canvas()
-    clearButton = QPushButton("Clear Canvas")
-    captureButton = QPushButton('Save Image')
-
-    widget.layout().addWidget(canvas)
-    widget.layout().addWidget(clearButton)
-    widget.layout().addWidget(captureButton)
-
-    clearButton.clicked.connect(canvas.blankCanvas)
-    captureButton.clicked.connect(lambda: canvas.saveImage()) 
-
-    # canvas.newPenColour(Qt.blue)  # choose pen colour
-    # canvas.newPenWidth(4)         # choose width of pen
-    widget.show()
+    win = FullWindow()
+    win.show()
     sys.exit(app.exec_())
