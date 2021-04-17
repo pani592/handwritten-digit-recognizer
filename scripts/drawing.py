@@ -1,10 +1,10 @@
 # This script contains the code that creates a class which can take an input drawing of a digit via mouse. 
 # It will present a canvas for the drawing. 
 # This will be incorporated into the overall GUI of the system, and the DNN model will be used to predict the digit drawn.
-# Last update: 9 April
+# Last update: 18 April
 
 import sys
-from test_model import recognize
+from pytorch import recognize
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QFrame
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, QThread
@@ -67,12 +67,6 @@ class Canvas(QWidget):
         img_28x28 = image.resize((28, 28), Image.ANTIALIAS)
         img_28x28.save('digit_inv_28x28.jpg')
 
-        image_array = np.array(img_28x28) # 28 x 28 
-        image_array = (image_array.flatten())  # array len 784
-        # image_array  = image_array.reshape(-1,1).T  # shape is 1 X 784 now, not sure if reqd.
-        image_array = image_array.astype('float32')
-        image_array /= 255 
-        # this image array will be input into the machine learning model.
         self.blankCanvas() #when image is saved, the canvas is cleared
 
 class FullWindow(QWidget):
@@ -124,8 +118,6 @@ class FullWindow(QWidget):
         self.number.addWidget(pre_num)
         self.numbox.setLayout(self.number)
 
-
-
     def clickExit(self):
         self.close()
 
@@ -136,7 +128,7 @@ class recogThread(QThread):
 
     def run(self):
         global predicted_num
-        predicted_num = recognize()
+        predicted_num, probab = recognize()
 
 # For testing purposes
 def drawingCanvas():

@@ -161,7 +161,7 @@ class TrainThread1(QThread):
             train(epoch)
             time.sleep(0.3)
             self.task_fin.emit(count*10)
-        torch.save(model, './my_model_lin.pth')
+        torch.save(model, './pytorch_model.pth')
 
 Accuracy1 = 0     
 class TestThread1(QThread):

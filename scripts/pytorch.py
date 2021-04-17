@@ -1,5 +1,5 @@
 # This script contains code for training and testing of MNIST dataset from torchvision, using pytorch.
-# Last updated: 15 April
+# Last updated: 18 April
 
 from __future__ import print_function
 from torch import nn, optim, cuda, Tensor
@@ -10,10 +10,13 @@ import time
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
+import random
+import cv2 as cv
+from skimage.color import rgb2gray
 
 # Run on GPU if available
 device = 'cuda' if cuda.is_available() else 'cpu'
-# print(f'Training MNIST Model on {device}\n{"=" * 44}')
+# print(f'You are Using {device}')
 
 # Training settings
 input_size = 784 # 28x28 image size
@@ -22,7 +25,7 @@ num_epochs = 10
 batch_size = 64
 learning_rate = 0.01
 
-# MNIST Dataset
+# MNIST Dataset - download.
 train_dataset = datasets.MNIST(root='mnist_data/', train=True, transform=transforms.ToTensor(), download=True)
 test_dataset = datasets.MNIST(root='mnist_data/', train=False, transform=transforms.ToTensor())
 
@@ -30,109 +33,100 @@ test_dataset = datasets.MNIST(root='mnist_data/', train=False, transform=transfo
 train_loader = data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 
-# for showing training and test data sets
-examples = iter(train_loader)
-samples,labels = examples.next()
-# print(samples.shape, labels.shape)  # samples: torch.Size([64, 1, 28, 28]) labels: torch.Size([64]) - Note: 64 because of batch size = 64.
-# print(samples[0])
+# Display Training and Testing Images - NOTE: this needs to be shown on GUI.
+def RandomNumberDisplay():
+    '''When called, it displays a random sample from MNIST dataset with its label'''
+    idx = random.randint(0, 60000)	
+    x, label = train_dataset[idx] # x is a torch.Tensor (image) of size [1,28,28]
+    plt.title('Example of a {}'.format(label))
+    plt.axis('off')
+    plt.imshow(x.numpy().squeeze(), cmap='gray') # can do gray_r for black on white
 
-# num_of_images = 60
-# for index in range(num_of_images):
-#     plt.subplot(6, 10, index+1)
-#     plt.axis('off')
-#     plt.imshow(samples[index].numpy().squeeze(), cmap='gray_r')  #gray r has white bg and black font
-# plt.show()
+class ConvNet(nn.Module):
+    ''' Covolutional Deep Learning Model - more accurate than inital MLP model with 5 layers '''
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 10, 5) # input channel dim 1 (grayscale), 10 output channels, 5 core size
+        self.conv2 = nn.Conv2d(10, 20, 3) # 10 input channels, 20 output channels, 3 core size 
+        self.fc1 = nn.Linear(20*10*10, 500) # 2000 input channels, 500 output channels
+        self.fc2 = nn.Linear(500, 10) # 500 input channels, 10 output channels
+    def forward(self,x):
+        in_size = x.size(0) # in_size = batch size(n). x is as a tensor of n*1*28*28.
+        x = F.relu(self.conv1(x)) # n*1*28*28 -> n*10*24*24 (28x28 image undergoes a convolution with a core of 5x5, and the output becomes 24x24)
+        x = F.max_pool2d(x, 2, 2) # n*10*24*24 -> n*10*12*12 (2*2 pooling layer will be halved)
+        x = F.relu(self.conv2(x)) # n*10*12*12 -> n*20*10*10 
+        x = x.view(in_size, -1) # n*20*10*10 -> n*2000 
+        x = F.relu(self.fc1(x)) # n*2000 -> n*500
+        return F.log_softmax(self.fc2(x), dim=1) # n*500 -> n*10
 
-# Multilayer Model
-class NeuralNet(nn.Module):
-    def __init__(self, input_size, num_classes):
-        super(NeuralNet, self).__init__()
-        self.l1 = nn.Linear(input_size, 520)    
-        self.l2 = nn.Linear(520, 320)
-        self.l3 = nn.Linear(320, 240)
-        self.l4 = nn.Linear(240, 120)
-        self.l5 = nn.Linear(120, num_classes)
-    def forward(self, x):
-        x = x.view(-1, 784)  # Flatten the data (n, 1, 28, 28)-> (n, 784)
-        x = F.relu(self.l1(x)) 
-        x = F.relu(self.l2(x))
-        x = F.relu(self.l3(x))
-        x = F.relu(self.l4(x))
-        return self.l5(x)
+model = ConvNet().to(device) # define an instance of the model
+criterion = nn.CrossEntropyLoss() # loss criterion
+optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)  # optimizer
 
-# # Covolutional Model (more accurate but not currently using)
-# class ConvNet(nn.Module):
-#     def __init__(self):
-#         super().__init__()
-#         self.conv1 = nn.Conv2d(1, 10, 5) #  1 input channels, 10 output channels, 5 core size
-#         self.conv2 = nn.Conv2d(10, 20, 3) # 10 input channels, 20 output channels, 3 core size 
-#         self.fc1 = nn.Linear(20*10*10, 500) # 2000 input channels, 500 output channels
-#         self.fc2 = nn.Linear(500, 10) # 500 input channels, 10 output channels
-#     def forward(self,x):
-#         in_size = x.size(0) # in_size= value of BATCH_SIZE. The input x can be regarded as a tensor of n*1*28*28.
-#         x = F.relu(self.conv1(x)) # batch*1*28*28 -> batch*10*24*24 (28x28 image undergoes a convolution with a core of 5x5, and the output becomes 24x24)
-#         x = F.max_pool2d(x, 2, 2) # batch*10*24*24 -> batch*10*12*12 (2*2 pooling layer will be halved)
-#         x = F.relu(self.conv2(x)) # batch*10*12*12 -> batch*20*10*10 
-#         x = x.view(in_size, -1) # batch*20*10*10 -> batch*2000 
-#         x = F.relu(self.fc1(x)) # batch*2000 -> batch*500
-#         return F.log_softmax(self.fc2(x), dim=1) # batch*500 -> batch*10
-
-# intialise model, define loss and optimiser
-model = NeuralNet(input_size, num_classes).to(device)
-# model = ConvNet().to(device)
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)  # mom originally 0.5. Could use Adam but SGD is better.
-
-# Training
 def train(epoch):
-    model.train()
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)   # cpu or gpu
-        optimizer.zero_grad()
-        output = model(data)
-        loss = criterion(output, target)
-        loss.backward()
-        optimizer.step()
-        # if batch_idx % 100 == 0:  # print every 100 steps - reduce steps to create progress bars later on.
-        #     print('Train Epoch: {} | Batch Status: {}/{} ({:.0f}%) | Loss: {:.6f}'.format(
-        #         epoch, batch_idx * len(data), len(train_loader.dataset), 100. * batch_idx / len(train_loader), loss.item()))
+    '''Training the Model'''
+    model.train() # set model to train mode
+    for batch_idx, (images, labels) in enumerate(train_loader): # iterate through each batch
+        images, labels = images.to(device), labels.to(device)   # send to cpu/gpu
+        optimizer.zero_grad() # zero out optimizer gradients
+        predictions = model(images) # pass batch of image tensors to model, return predictins for the batch
+        loss = criterion(predictions, labels) # calculate loss by comparing prediction to actual label
+        loss.backward() # backward pass
+        optimizer.step() # use optimizer to modify model parameters
+        if batch_idx % 100 == 0:  
+            print('Train Epoch: {} | Batch Status: {}/{} ({:.0f}%) | Loss: {:.6f}'.format(epoch, batch_idx*len(images), len(train_loader.dataset), 100.*batch_idx/len(train_loader), loss.item()))
 
-# Testing
 def test():
-    model.eval()
+    '''Testing the Model'''
+    model.eval() # set model to evaluate mode
     test_loss = 0
     correct = 0
-    for data, target in test_loader:
-        data, target = data.to(device), target.to(device) # cpu or gpu
-        output = model(data)
-        test_loss += criterion(output, target).item()         # sum up batch loss
-        pred = output.data.max(1, keepdim=True)[1]         # get the index of the max
-        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+    for images, labels in test_loader:
+        images, labels = images.to(device), labels.to(device) # cpu or gpu
+        predictions = model(images)
+        test_loss += criterion(predictions, labels).item() # sum up batch loss
+        pred = predictions.data.max(1, keepdim=True)[1]   # get the index of the max - gives prediction
+        correct += pred.eq(labels.data.view_as(pred)).cpu().sum()
 
     test_loss /= len(test_loader.dataset)
+    print(f'===========================\nTest set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} '
+          f'({100. * correct / len(test_loader.dataset):.0f}%)')
     return correct/len(test_loader.dataset)
-    # print(f'===========================\nTest set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} '
-    #       f'({100. * correct / len(test_loader.dataset):.0f}%)')
 
-##########  ##########
+def model_run():
+    ''' runs model - training and testing for the number of epochs specified, and saves model'''
+    since = time.time()
+    for epoch in range(1,num_epochs):
+        epoch_start = time.time()        
+        train(epoch) # training 
+        m, s = divmod(time.time() - epoch_start, 60)
+        print(f'Training time: {m:.0f}m {s:.0f}s')      
+        test() # Testing after each training round
+        m, s = divmod(time.time() - epoch_start, 60)
+        print(f'Testing time: {m:.0f}m {s:.0f}s')   
+    m, s = divmod(time.time() - since, 60)
+    print(f'Total Time: {m:.0f}m {s:.0f}s\nModel was trained on {device}!')
+    # Save the model after completing training
+    torch.save(model, './pytorch_model.pth')  # save model
 
-# Attempts to make a prediction for just ONE image
 def predict(tensor, model):
+    ''' given a trained model and single image tensor, return prediction for the image'''
+    model.eval() # set model to evaluate mode
     tensor = tensor.to(device)
-    # make prediction
-    output = model(tensor.float()) 
-    index = output.data.cpu().numpy().argmax()
-    return index
+    with torch.no_grad(): # recommended for speed
+        prediction = model(tensor.float())
+    probab = list(torch.exp(prediction).data.cpu().numpy()[0])
+    pred = probab.index(max(probab))
+    # pred = prediction.data.cpu().numpy().argmax() # another equivalent way
+    return pred, probab
 
-# function from online that helps to plot graph - however not working (probabilities not under 1!)
-def view_classify(img, ps):
-    ''' Function for viewing an image and it's predicted classes.'''
-    ps = ps.cpu().numpy().squeeze()
-
+def view_classify(img, probab):
+    ''' Function for viewing the image and it's prediction. Note: can display the real image if that's better visually'''
+    # probab = probab.cpu().numpy().squeeze()
     fig, (ax1, ax2) = plt.subplots(figsize=(6,9), ncols=2)
-    ax1.imshow(img.cpu().resize_(1, 28, 28).numpy().squeeze())
+    ax1.imshow(img.cpu().resize_(1, 28, 28).numpy().squeeze(), cmap='gray')
     ax1.axis('off')
-    ax2.barh(np.arange(10), ps)
+    ax2.barh(np.arange(10), probab)
     ax2.set_aspect(0.1)
     ax2.set_yticks(np.arange(10))
     ax2.set_yticklabels(np.arange(10))
@@ -141,35 +135,21 @@ def view_classify(img, ps):
     plt.tight_layout()
     plt.show()
 
+def recognize():
+    ''' This will be moved to a better location later. Calls predict() from pytorch script'''
+    model = torch.load('pytorch_model.pth') # load model
+    img = cv.imread('digit_inv_28x28.jpg') # load image - [28,28,3]
+    img = rgb2gray(img) # make grayscale - [28x28]
+    tensor = torch.tensor(img)  # transform to tensor
+    tensor = tensor.reshape(-1, 1, 28, 28) # make into form acceptable by model
+    # tensor = tensor.flatten() # flatten
+    pred, probab = predict(tensor, model) # use model to predict
+    view_classify(tensor,probab) # plot image and probability
+    return pred, probab
 
-def model_run():
-    since = time.time()
-    for epoch in range(1, 10):
-        epoch_start = time.time()
-        train(epoch) # TRAIN
-        m, s = divmod(time.time() - epoch_start, 60)
-        print(f'Training time: {m:.0f}m {s:.0f}s')
-        test() # TEST
-        m, s = divmod(time.time() - epoch_start, 60)
-        print(f'Testing time: {m:.0f}m {s:.0f}s')
-
-    m, s = divmod(time.time() - since, 60)
-    print(f'Total Time: {m:.0f}m {s:.0f}s\nModel was trained on {device}!')
-
-    # Save the model after training
-    torch.save(model, './my_model_lin.pth')  # this also could be wrong - the point is to save model so you don't have to retrain each time.
-
-
-    ############################# bbelow is TESTING, not sure if working properly #############
-    images, labels = next(iter(test_loader))
-    img = images[10].view(1, 784)
-    print(img.shape)
-    print(img.size)
-    print(img.dtype)
-    img = img.to(device) # gpu or cpu
-    with torch.no_grad():
-        logps = model(img)
-    ps = torch.exp(logps)
-    probab = list(ps.data.cpu().numpy()[0])
-    print("Predicted Digit =", probab.index(max(probab)))
-    view_classify(img.view(1, 28, 28), ps)
+if __name__ == "__main__":
+    ''' testing model - only runs when this script is run directly'''
+    # model_run()  # trains for 10 epochs and displays gradual increase in accuracy, saves model.
+    # model = torch.load('pytorch_model.pth') # load saved model
+    # test()   
+    recognize()
