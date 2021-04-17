@@ -106,7 +106,7 @@ class SecWin(QWidget):
         self.bar.setValue(value)
 
     def updateTrain1(self):
-        label_train_cmp = QtWidgets.QLabel("Model training is complete.")
+        label_train_cmp = QtWidgets.QLabel("Model training is complete. Ready to test model")
         box_text.addWidget(label_train_cmp)
         self.box.setLayout(box_text)
     
@@ -168,13 +168,12 @@ class TestThread1(QThread):
     task_fin = pyqtSignal(int)
 
     def run(self):
-        for epoch in range(1,11):
-            global Accuracy1
-            tmp_acc = test()
-            if epoch == 10:
-                Accuracy1 = tmp_acc*100
-            time.sleep(0.2)
-            self.task_fin.emit(90+epoch)
+        global Accuracy1
+        tmp_acc = test()
+        # if epoch == 10:
+        Accuracy1 = tmp_acc*100
+        time.sleep(0.2)
+        self.task_fin.emit(100)
 
 def window():
     app = QApplication(sys.argv)

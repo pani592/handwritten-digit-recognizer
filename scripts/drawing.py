@@ -60,11 +60,9 @@ class Canvas(QWidget):
         self.image.save('digit.jpg', 'jpg')   #  directly save qimage to jpg
         # or using PIL to manipulate image before save:
         image = ImageQt.fromqimage(self.image)
-        image = image.convert('L')  # ensure grayscale
-        image = ImageOps.invert(image)  # invert colour
-        image.save('digit_inv.jpg')
-
-        img_28x28 = image.resize((28, 28), Image.ANTIALIAS)
+        # image = image.convert('L')  # ensure grayscale
+        image = ImageOps.invert(image)  # invert colour - MNIST is white on black bg.
+        img_28x28 = image.resize((28, 28), Image.ANTIALIAS) # resize to 28x28
         img_28x28.save('digit_inv_28x28.jpg')
 
         self.blankCanvas() #when image is saved, the canvas is cleared
