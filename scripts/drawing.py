@@ -80,19 +80,16 @@ class FullWindow(QWidget):
         self.number.setAlignment(Qt.AlignTop)
         self.numbox.setLayout(self.number)
         self.clearButton = QPushButton("Clear Canvas")
-        self.captureButton = QPushButton('Save Image')
         self.recogButton = QPushButton('Recognize Number')
         self.exit = QPushButton("Exit")
         self.button_layout = QVBoxLayout(self)
         self.button_layout.addWidget(self.clearButton)
-        self.button_layout.addWidget(self.captureButton)
         self.button_layout.addWidget(self.recogButton)
         self.button_layout.addWidget(self.numbox)
         self.button_layout.addWidget(self.exit)
         self.Hlayout.addWidget(self.canvas)
         self.Hlayout.addLayout(self.button_layout)
         self.clearButton.clicked.connect(self.clear)
-        self.captureButton.clicked.connect(self.capture)
         self.recogButton.clicked.connect(self.recognizeButton)
         self.exit.clicked.connect(self.clickExit)
 
@@ -102,10 +99,8 @@ class FullWindow(QWidget):
     def clear(self):
         self.canvas.blankCanvas()
 
-    def capture(self):
-        self.canvas.saveImage()
-
     def recognizeButton(self):
+        self.canvas.saveImage()
         self.recog = recogThread()
         self.recog.start()
         self.recog.finished.connect(self.updatePredict)
