@@ -170,7 +170,6 @@ class TestThread1(QThread):
     def run(self):
         global Accuracy1
         tmp_acc = test()
-        # if epoch == 10:
         Accuracy1 = tmp_acc*100
         time.sleep(0.2)
         self.task_fin.emit(100)

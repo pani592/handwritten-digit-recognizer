@@ -62,10 +62,10 @@ class Canvas(QWidget):
         image = ImageQt.fromqimage(self.image)
         # image = image.convert('L')  # ensure grayscale
         image = ImageOps.invert(image)  # invert colour - MNIST is white on black bg.
-        img_28x28 = image.resize((20, 20), Image.ANTIALIAS) # resize to 20x20
-        img_28x28.save('digit_inv_20x20.jpg') # save as jpg
+        image = image.resize((20, 20), Image.ANTIALIAS) # resize to 20x20
+        image.save('digit_inv_20x20.jpg') # save as jpg
 
-        self.blankCanvas() #when image is saved, the canvas is cleared
+        self.blankCanvas() # when image is saved, the canvas is cleared
 
 class FullWindow(QWidget):
     def __init__(self):

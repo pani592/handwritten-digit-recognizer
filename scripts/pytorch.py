@@ -123,6 +123,7 @@ def RandomNumberDisplay():
         plt.axis('off')
         plt.imshow(x.numpy().squeeze(), cmap='gray') # can do gray_r for black on white
     plt.savefig('mnist_examples.jpg')
+    plt.close(fig)
 
 def view_probabilities(tensor, probab):
     ''' Function for plotting and saving the handwritten digit and graph of probabilities.'''
@@ -143,6 +144,7 @@ def view_probabilities(tensor, probab):
     ax2.set_xlim(0, 1.1)
     plt.tight_layout()
     plt.savefig('class_prob.jpg')
+    plt.close(fig)
 
 def recognize():
     ''' Call this function to import saved model + image and predict using model.'''
@@ -150,6 +152,7 @@ def recognize():
     img = cv.imread('digit_inv_20x20.jpg') # load image - [20x20x3]
     img = cv.copyMakeBorder(img.copy(), 4, 4, 4, 4, cv.BORDER_CONSTANT) # add padding to make 28x28
     img = rgb2gray(img) # make grayscale - [28x28]
+    ret,img = cv.threshold(img,0.5,1,cv.THRESH_BINARY) # threshold increases accuracy of prediction
     tensor = torch.tensor(img)  # transform to tensor [1x28x28]
     tensor = tensor.reshape(-1, 1, 28, 28) # make into form acceptable by model [1x1x28x28]
     pred, probab = predict(tensor, model) # use model to predict, return prediction and probability array
@@ -162,6 +165,6 @@ if __name__ == "__main__":
     # model = torch.load('pytorch_model.pth') # load saved model
     # test()   
     # recognize()
-    RandomNumberDisplay()
-
+    # RandomNumberDisplay()
 # %%
+
