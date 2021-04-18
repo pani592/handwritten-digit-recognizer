@@ -58,12 +58,12 @@ class Canvas(QWidget):
 
     def saveImage(self):
         self.image.save('digit.jpg', 'jpg')   #  directly save qimage to jpg
-        # or using PIL to manipulate image before save:
+        # PIL to manipulate image before save:
         image = ImageQt.fromqimage(self.image)
         # image = image.convert('L')  # ensure grayscale
         image = ImageOps.invert(image)  # invert colour - MNIST is white on black bg.
-        img_28x28 = image.resize((28, 28), Image.ANTIALIAS) # resize to 28x28
-        img_28x28.save('digit_inv_28x28.jpg')
+        img_28x28 = image.resize((20, 20), Image.ANTIALIAS) # resize to 20x20
+        img_28x28.save('digit_inv_20x20.jpg') # save as jpg
 
         self.blankCanvas() #when image is saved, the canvas is cleared
 
@@ -134,3 +134,7 @@ def drawingCanvas():
     win = FullWindow()
     win.show()
     sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    ''' testing model - only runs when this script is run directly'''
+    drawingCanvas()

@@ -115,10 +115,10 @@ def predict(tensor, model):
 def RandomNumberDisplay():
     '''When called, it plots and saves 10 random samples from MNIST dataset with its label'''
     fig=plt.figure(figsize=(16, 6))
-    for i in range(1, 11):
+    for i in range(1, 11): # 10 images
         idx = random.randint(0, 60000)	
         x, label = train_dataset[idx] # x is a torch.Tensor (image) of size [1,28,28]
-        fig.add_subplot(2, 5, i)
+        fig.add_subplot(2, 5, i) # 2 rows 5 cols
         plt.title('Example of a {}'.format(label))
         plt.axis('off')
         plt.imshow(x.numpy().squeeze(), cmap='gray') # can do gray_r for black on white
@@ -147,9 +147,10 @@ def view_probabilities(tensor, probab):
 def recognize():
     ''' Call this function to import saved model + image and predict using model.'''
     model = torch.load('pytorch_model.pth') # load model
-    img = cv.imread('digit_inv_28x28.jpg') # load image - [28x28x3]
-    img2 = rgb2gray(img) # make grayscale - [28x28]
-    tensor = torch.tensor(img2)  # transform to tensor [1x28x28]
+    img = cv.imread('digit_inv_20x20.jpg') # load image - [20x20x3]
+    img = cv.copyMakeBorder(img.copy(), 4, 4, 4, 4, cv.BORDER_CONSTANT) # add padding to make 28x28
+    img = rgb2gray(img) # make grayscale - [28x28]
+    tensor = torch.tensor(img)  # transform to tensor [1x28x28]
     tensor = tensor.reshape(-1, 1, 28, 28) # make into form acceptable by model [1x1x28x28]
     pred, probab = predict(tensor, model) # use model to predict, return prediction and probability array
     view_probabilities(tensor,probab) # plot images and probability and save to file
