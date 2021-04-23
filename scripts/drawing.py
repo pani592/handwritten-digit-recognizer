@@ -57,11 +57,13 @@ class Canvas(QWidget):
         self.penWidth = width
 
     def saveImage(self):
-        self.image.save('digit.jpg', 'jpg')   #  directly save qimage to jpg
-        # PIL to manipulate image before save:
-        image = ImageQt.fromqimage(self.image)
+        image = ImageQt.fromqimage(self.image) # PIL to manipulate image before save
         # image = image.convert('L')  # ensure grayscale
         image = ImageOps.invert(image)  # invert colour - MNIST is white on black bg.
+        coords = image.getbbox()  # coords of the edge
+        image = image.crop(coords) # crop
+        image = image.resize((400, 400), Image.ANTIALIAS) # resize to 20x20
+        image.save('digit.jpg') # save as jpg
         image = image.resize((20, 20), Image.ANTIALIAS) # resize to 20x20
         image.save('digit_inv_20x20.jpg') # save as jpg
 
