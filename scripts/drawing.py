@@ -70,7 +70,7 @@ class Canvas(QWidget):
 class FullWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setGeometry(200,200,700,400) #sets window to appear 600 pixels from the left and 600 from the top with a size of 300 x 300
+        self.setGeometry(200,200,700,425) #sets window to appear 200 pixels from the left and 200 from the top with a size of 700 x 425 
         self.Hlayout = QHBoxLayout(self)
         self.setLayout(self.Hlayout)
         self.canvas = Canvas()
