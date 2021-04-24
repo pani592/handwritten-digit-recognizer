@@ -8,7 +8,7 @@ from pytorch import recognize
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QFrame
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, QThread
-from PyQt5.QtGui import QPainterPath, QPainter, QImage, QPen
+from PyQt5.QtGui import QPainterPath, QPainter, QImage, QPen, QPixmap
 
 import numpy as np
 from PIL import Image, ImageQt, ImageOps
@@ -69,25 +69,38 @@ class Canvas(QWidget):
 
         self.blankCanvas() # when image is saved, the canvas is cleared
 
-class FullWindow(QWidget):
+#FIX ALL 'Self' sections to prevent warning error
+class CanvasWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setGeometry(200,200,700,425) #sets window to appear 200 pixels from the left and 200 from the top with a size of 700 x 425 
         self.Hlayout = QHBoxLayout(self)
-        self.setLayout(self.Hlayout)
+        self.setLayout(self.Hlayout) #fix these 2 lines to prevent error from popping
         self.canvas = Canvas()
-        self.numbox = QtWidgets.QFrame(self) 
-        self.numbox.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
-        self.number = QVBoxLayout(self)
-        self.number.setAlignment(Qt.AlignTop)
-        self.numbox.setLayout(self.number)
+        self.predictBox = QtWidgets.QFrame(self) 
+        self.predictBox.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
+        self.numberSet = QHBoxLayout(self)
+        for number in range(0,10):
+            self.numberSet.addWidget(QtWidgets.QLabel("%d" %number))
+        self.numberSet.setAlignment(Qt.AlignCenter)
+        self.probabilityBox = QVBoxLayout(self)
+        temp_label = QtWidgets.QLabel("Please draw a number and then press the recognize button.")
+        self.prob_label = QtWidgets.QLabel("Hidden label", self)
+        self.prob_label.clear()
+        # prob_pix = QPixmap('class_prob.jpg')
+        # prob_label.setPixmap(prob_pix)
+        self.probabilityBox.addWidget(temp_label)
+        self.probabilityBox.addLayout(self.numberSet)
+        self.probabilityBox.addWidget(self.prob_label)
+        self.probabilityBox.setAlignment(Qt.AlignTop)
+        self.predictBox.setLayout(self.probabilityBox)
         self.clearButton = QPushButton("Clear Canvas")
         self.recogButton = QPushButton('Recognize Number')
         self.exit = QPushButton("Exit")
         self.button_layout = QVBoxLayout(self)
         self.button_layout.addWidget(self.clearButton)
         self.button_layout.addWidget(self.recogButton)
-        self.button_layout.addWidget(self.numbox)
+        self.button_layout.addWidget(self.predictBox)
         self.button_layout.addWidget(self.exit)
         self.Hlayout.addWidget(self.canvas)
         self.Hlayout.addLayout(self.button_layout)
@@ -99,9 +112,11 @@ class FullWindow(QWidget):
         self.show()
 
     def clear(self):
+        self.reset()
         self.canvas.blankCanvas()
 
     def recognizeButton(self):
+        self.reset()
         self.canvas.saveImage()
         self.recog = recogThread()
         self.recog.start()
@@ -110,8 +125,21 @@ class FullWindow(QWidget):
     def updatePredict(self):
         global predicted_num
         pre_num = QtWidgets.QLabel("%d" % predicted_num)
-        self.number.addWidget(pre_num)
-        self.numbox.setLayout(self.number)
+        bigBold = pre_num.font()
+        bigBold.setPointSize(20)
+        bigBold.setBold(True)
+        pre_num.setFont(bigBold)
+        self.numberSet.itemAt(predicted_num).widget().deleteLater()
+        self.numberSet.insertWidget(predicted_num,pre_num)
+        prob_pix = QPixmap('class_prob.jpg')
+        self.prob_label.setPixmap(prob_pix)
+
+    def reset(self):
+        self.prob_label.clear()
+        for number in range(0,10):
+            self.numberSet.itemAt(number).widget().deleteLater()
+        for number in range(0,10):
+            self.numberSet.insertWidget(number, QtWidgets.QLabel("%d" %number))
 
     def clickExit(self):
         self.close()
@@ -128,7 +156,7 @@ class recogThread(QThread):
 # For testing purposes
 def drawingCanvas():
     app = QApplication(sys.argv)
-    win = FullWindow()
+    win = CanvasWindow()
     win.show()
     sys.exit(app.exec_())
 

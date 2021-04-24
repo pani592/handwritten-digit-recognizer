@@ -128,7 +128,7 @@ def RandomNumberDisplay():
 def view_probabilities(tensor, probab):
     ''' Function for plotting and saving the handwritten digit and graph of probabilities.'''
     # probab = probab.cpu().numpy().squeeze() # if probab is passed in as tensor rather than np array
-    fig, (ax0,ax1, ax2) = plt.subplots(figsize=(12,5), ncols=3)  # or use figsize=(5,12), nrows=3   or figsize=(12,5), ncols=3
+    fig, (ax0,ax1, ax2) = plt.subplots(figsize=(3.5,2), ncols=3)  # or use figsize=(5,12), nrows=3   or figsize=(12,5), ncols=3
     img = cv.imread('digit.jpg')
     ax0.imshow(img) # original 400 x 400 image.
     ax0.set_title('Handwritten input')

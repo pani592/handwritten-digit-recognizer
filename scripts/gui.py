@@ -5,7 +5,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtGui import *
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QGridLayout, QProgressBar, QLineEdit, QHBoxLayout, QFrame
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QGridLayout, QProgressBar, QLineEdit, QHBoxLayout, QFrame, QMenuBar
 from drawing import *
 import sys
 import time
@@ -64,6 +64,14 @@ class SecWin(QWidget):
         self.setGeometry(200,200,500,300) #sets window to appear 600 pixels from the left and 600 from the top with a size of 300 x 300
         self.Vlayout = QVBoxLayout(self)
         self.setLayout(self.Vlayout)
+        # self.menubar = QMenuBar(self)
+        # mFile = self.menubar.addMenu("File")
+        # mFile.addAction("Quit", self.clickExit)
+        # mView = self.menubar.addMenu("View")
+        # mView.addAction("View Training Dataset Examples", self.viewExample)
+        # mView.addAction("View Testing Dataset Examples")
+        # self.menubar.addMenu("Help")
+        # self.Vlayout.addWidget(self.menubar) 
         self.box = QtWidgets.QFrame(self) 
         self.box.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
         progress_label = QtWidgets.QLabel("Progress:")
@@ -78,6 +86,7 @@ class SecWin(QWidget):
         self.button_layout.addWidget(self.b2)
         self.button_layout.addWidget(self.b3)
         self.button_layout.addWidget(self.b4)
+        self.b3.setEnabled(False)
         self.Vlayout.addWidget(self.box)
         self.Vlayout.addWidget(self.bar)
         self.Vlayout.addLayout(self.button_layout)
@@ -101,6 +110,7 @@ class SecWin(QWidget):
         self.train_thread1.task_fin.connect(self.setValue)
         self.train_thread1.start()
         self.train_thread1.finished.connect(self.updateTrain1)
+        self.b3.setEnabled(True)
 
     def setValue(self, value):
         self.bar.setValue(value)
@@ -131,7 +141,7 @@ class SecWin(QWidget):
         self.button_layout.insertWidget(0,self.b5)
 
     def drawingButton(self):
-        self.newCanvas = FullWindow()
+        self.newCanvas = CanvasWindow()
         self.newCanvas.initUI()
 
     def initModel2(self):
@@ -140,15 +150,18 @@ class SecWin(QWidget):
         '''
         self.setWindowTitle("Model 2") #sets title of the window
         self.show()
-    
-    def update(self):
-        '''
-        Updates the label to adjust based on the current text 
-        Prevents text from being cropped out
-        '''
-        self.label.adjustSize()
+
+    def clearLayout(self):
+        for i in reversed(range(box_text.count())): 
+            print(i)
+            box_text.itemAt(i).widget().deleteLater()
+
+    def viewExample(self):
+        exampleWin = TrainImages()
+        exampleWin.initExample()
 
     def clickExit(self):
+        self.clearLayout()
         self.close()
 
 class TrainThread1(QThread):
@@ -163,6 +176,7 @@ class TrainThread1(QThread):
             self.task_fin.emit(count*10)
         torch.save(model, './pytorch_model.pth')
 
+
 Accuracy1 = 0     
 class TestThread1(QThread):
     task_fin = pyqtSignal(int)
@@ -173,6 +187,25 @@ class TestThread1(QThread):
         Accuracy1 = tmp_acc*100
         time.sleep(0.2)
         self.task_fin.emit(100)
+
+class TrainImages(QtWidgets.QDialog):
+    def __init__(self):
+        super().__init__()
+        # self.setGeometry(200,200,500,300)
+        # mnistLayout = QVBoxLayout()
+        # exampleLab = QtWidgets.QLabel()
+        # examplesImage = QImage(r'script/mnist_examples.jpg')
+        # exampleLab.setPixmap(QPixmap.fromImage(examplesImage))
+        # mnistLayout.addWidget(exampleLab)
+        self.exitBut = QPushButton("Exit")
+        self.exitBut.clicked.connect(self.close)
+        # mnistLayout.addWidget(self.exitBut)
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.exitBut)
+    
+    def initExample(self):
+        self.show()
+
 
 def window():
     app = QApplication(sys.argv)
