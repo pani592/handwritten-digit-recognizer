@@ -12,8 +12,6 @@ import time
 import torch
 
 class UI(QWidget):
-    #best implementation in terms of dynamically changing window and creating new options
-    #Dynamically adjusts the window and buttons, adds new ones when one is pressed
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -74,7 +72,7 @@ class SecWin(QWidget):
         # self.Vlayout.addWidget(self.menubar) 
         self.box = QtWidgets.QFrame(self) 
         self.box.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
-        progress_label = QtWidgets.QLabel("Progress:")
+        progress_label = QtWidgets.QLabel("First, press 'TRAIN MODEL' to begin training!")
         box_text.addWidget(progress_label)
         self.box.setLayout(box_text)
         self.bar = QProgressBar(self)
@@ -103,7 +101,7 @@ class SecWin(QWidget):
 
     def train_model1(self):
         self.b2.setEnabled(False)
-        label_train = QtWidgets.QLabel("Model is being trained...")
+        label_train = QtWidgets.QLabel("Model is being trained... see progress below")
         box_text.addWidget(label_train)
         self.box.setLayout(box_text)
         self.train_thread1 = TrainThread1()
@@ -116,7 +114,7 @@ class SecWin(QWidget):
         self.bar.setValue(value)
 
     def updateTrain1(self):
-        label_train_cmp = QtWidgets.QLabel("Model training is complete. Ready to test model")
+        label_train_cmp = QtWidgets.QLabel("Model training is complete. Press TEST MODEL for testing.")
         box_text.addWidget(label_train_cmp)
         self.box.setLayout(box_text)
     
@@ -169,7 +167,8 @@ class TrainThread1(QThread):
 
     def run(self):
         count = 0
-        for epoch in range(1,10):
+        self.task_fin.emit(2)
+        for epoch in range(1,11):
             count += 1
             train(epoch)
             time.sleep(0.3)

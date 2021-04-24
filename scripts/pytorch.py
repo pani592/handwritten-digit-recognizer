@@ -1,7 +1,3 @@
-# This script contains code for training and testing of MNIST dataset from torchvision, using pytorch.
-# Last updated: 18 April
-#%%
-
 from __future__ import print_function
 from torch import nn, optim, cuda, Tensor
 from torch.utils import data
@@ -21,7 +17,7 @@ device = 'cuda' if cuda.is_available() else 'cpu'
 
 # Training settings
 input_size = 784 # 28x28 image size
-num_classes = 10 # 0-9 digits
+num_classes = 10 # 10 digits - classes
 num_epochs = 10
 batch_size = 64
 learning_rate = 0.01
@@ -65,8 +61,8 @@ def train(epoch):
         loss = criterion(predictions, labels) # calculate loss by comparing prediction to actual label
         loss.backward() # backward pass
         optimizer.step() # use optimizer to modify model parameters
-        if batch_idx % 100 == 0:  
-            print('Train Epoch: {} | Batch Status: {}/{} ({:.0f}%) | Loss: {:.6f}'.format(epoch, batch_idx*len(images), len(train_loader.dataset), 100.*batch_idx/len(train_loader), loss.item()))
+        # if batch_idx % 100 == 0:  
+        #     print('Train Epoch: {} | Batch Status: {}/{} ({:.0f}%) | Loss: {:.6f}'.format(epoch, batch_idx*len(images), len(train_loader.dataset), 100.*batch_idx/len(train_loader), loss.item()))
 
 def test():
     '''Testing the Model'''
@@ -81,8 +77,8 @@ def test():
         correct += pred.eq(labels.data.view_as(pred)).cpu().sum()
 
     test_loss /= len(test_loader.dataset)
-    print(f'===========================\nTest set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} '
-          f'({100. * correct / len(test_loader.dataset):.0f}%)')
+    # print(f'===========================\nTest set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} '
+    #       f'({100. * correct / len(test_loader.dataset):.0f}%)')
     return correct/len(test_loader.dataset)
 
 def model_run():
@@ -112,59 +108,54 @@ def predict(tensor, model):
     # pred = prediction.data.cpu().numpy().argmax() # another equivalent way
     return pred, probab
 
-def RandomNumberDisplay():
+def showMNISTExamples():
     '''When called, it plots and saves 10 random samples from MNIST dataset with its label'''
-    fig=plt.figure(figsize=(16, 6))
+    fig=plt.figure()
     for i in range(1, 11): # 10 images
         idx = random.randint(0, 60000)	
         x, label = train_dataset[idx] # x is a torch.Tensor (image) of size [1,28,28]
         fig.add_subplot(2, 5, i) # 2 rows 5 cols
-        plt.title('Example of a {}'.format(label))
+        plt.title('{}'.format(label))
         plt.axis('off')
-        plt.imshow(x.numpy().squeeze(), cmap='gray') # can do gray_r for black on white
+        plt.imshow(x.numpy().squeeze(), cmap='gray')
     plt.savefig('mnist_examples.jpg')
     plt.close(fig)
 
-def view_probabilities(tensor, probab):
+def plot_probabilities(tensor, probab):
     ''' Function for plotting and saving the handwritten digit and graph of probabilities.'''
-    # probab = probab.cpu().numpy().squeeze() # if probab is passed in as tensor rather than np array
-    fig, (ax0,ax1, ax2) = plt.subplots(figsize=(3.5,2), ncols=3)  # or use figsize=(5,12), nrows=3   or figsize=(12,5), ncols=3
+    fig, (ax0,ax1, ax2) = plt.subplots(figsize=(5,4), ncols=3)
     img = cv.imread('digit.jpg')
-    ax0.imshow(img) # original 400 x 400 image.
-    ax0.set_title('Handwritten input')
+    ax0.imshow(img) # original image.
+    ax0.set_title('Input')
     ax0.axis('off')
     ax1.imshow(tensor.cpu().resize_(1, 28, 28).numpy().squeeze(), cmap='gray') # transfor tensor to show on screen
     ax1.axis('off')
-    ax1.set_title('Tensor passed into model')
+    ax1.set_title('Tensor')
     ax2.barh(np.arange(10), probab) # plot probability array
     ax2.set_aspect(0.1)
     ax2.set_yticks(np.arange(10))
     ax2.set_yticklabels(np.arange(10))
-    ax2.set_title('Class Probability')
+    ax2.set_title('Probability')
     ax2.set_xlim(0, 1.1)
     plt.tight_layout()
     plt.savefig('class_prob.jpg')
     plt.close(fig)
 
 def recognize():
-    ''' Call this function to import saved model + image and predict using model.'''
+    ''' This function imports the saved model + image, and makes prediction.'''
     model = torch.load('pytorch_model.pth') # load model
     img = cv.imread('digit_inv_20x20.jpg') # load image - [20x20x3]
     img = cv.copyMakeBorder(img.copy(), 4, 4, 4, 4, cv.BORDER_CONSTANT) # add padding to make 28x28
     img = rgb2gray(img) # make grayscale - [28x28]
-    ret,img = cv.threshold(img,0.5,1,cv.THRESH_BINARY) # threshold increases accuracy of prediction
+    # ret,img = cv.threshold(img,0.5,1,cv.THRESH_BINARY) # threshold increases accuracy of prediction
     tensor = torch.tensor(img)  # transform to tensor [1x28x28]
     tensor = tensor.reshape(-1, 1, 28, 28) # make into form acceptable by model [1x1x28x28]
     pred, probab = predict(tensor, model) # use model to predict, return prediction and probability array
-    view_probabilities(tensor,probab) # plot images and probability and save to file
+    plot_probabilities(tensor,probab) # plot images and probability and save to file
     return pred, probab
 
 if __name__ == "__main__":
     ''' testing model - only runs when this script is run directly'''
     # model_run()  # trains for 10 epochs and displays gradual increase in accuracy, saves model.
-    # model = torch.load('pytorch_model.pth') # load saved model
-    # test()   
     # recognize()
-    # RandomNumberDisplay()
-# %%
-
+    showMNISTExamples()

@@ -1,8 +1,3 @@
-# This script contains the code that creates a class which can take an input drawing of a digit via mouse. 
-# It will present a canvas for the drawing. 
-# This will be incorporated into the overall GUI of the system, and the DNN model will be used to predict the digit drawn.
-# Last update: 18 April
-
 import sys
 from pytorch import recognize
 from PyQt5 import QtWidgets
@@ -16,9 +11,9 @@ from PIL import Image, ImageQt, ImageOps
 class Canvas(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)  # or instead use: super().__init__() 
-        self.image = QImage(400, 400, QImage.Format_Grayscale8)   # initially did Format_RGB32 but MNIST is 8bit grayscale so this improves accuracy.
+        self.image = QImage(500, 500, QImage.Format_Grayscale8)   # initially did Format_RGB32 but MNIST is 8bit grayscale so this improves accuracy.
         self.blankCanvas()   # instantiate QPointerPath and sets white background
-        self.penWidth = 40   # large pen width for better accuracy
+        self.penWidth = 30   # large pen width for better accuracy
         self.penColour = Qt.black
 
     # Creates a White canvas for drawing
@@ -46,23 +41,19 @@ class Canvas(QWidget):
 
     # # Widget size
     def sizeHint(self): 
-        return QSize(400, 400)
-
-    # Change pen colour
-    def newPenColour(self, colour):
-        self.penColour = colour
-
-    # Change pen width
-    def newPenWidth(self, width):
-        self.penWidth = width
+        return QSize(500, 500)
 
     def saveImage(self):
         image = ImageQt.fromqimage(self.image) # PIL to manipulate image before save
-        # image = image.convert('L')  # ensure grayscale
         image = ImageOps.invert(image)  # invert colour - MNIST is white on black bg.
-        coords = image.getbbox()  # coords of the edge
-        image = image.crop(coords) # crop
-        image = image.resize((400, 400), Image.ANTIALIAS) # resize to 20x20
+        coords = image.getbbox()  # returns tuple of coords of the corners: left, top, right, bottom
+        if coords != None: # if coords not empty
+            coords = list(coords)
+            coords[0] -= 50 # left pad 50
+            coords[1] -= 10 # top pad 10
+            coords[2] += 50 # right pad 50
+            coords[3] += 10 # bottom pad 10
+        image = image.crop(coords) # crop to boundary box
         image.save('digit.jpg') # save as jpg
         image = image.resize((20, 20), Image.ANTIALIAS) # resize to 20x20
         image.save('digit_inv_20x20.jpg') # save as jpg
@@ -73,7 +64,7 @@ class Canvas(QWidget):
 class CanvasWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setGeometry(200,200,700,425) #sets window to appear 200 pixels from the left and 200 from the top with a size of 700 x 425 
+        self.setGeometry(600,200,1100,550) #sets window to appear 600 pixels from the left and 200 from the top with a size of 1100 x 550 
         self.Hlayout = QHBoxLayout(self)
         self.setLayout(self.Hlayout) #fix these 2 lines to prevent error from popping
         self.canvas = Canvas()
@@ -87,8 +78,6 @@ class CanvasWindow(QWidget):
         temp_label = QtWidgets.QLabel("Please draw a number and then press the recognize button.")
         self.prob_label = QtWidgets.QLabel("Hidden label", self)
         self.prob_label.clear()
-        # prob_pix = QPixmap('class_prob.jpg')
-        # prob_label.setPixmap(prob_pix)
         self.probabilityBox.addWidget(temp_label)
         self.probabilityBox.addLayout(self.numberSet)
         self.probabilityBox.addWidget(self.prob_label)
