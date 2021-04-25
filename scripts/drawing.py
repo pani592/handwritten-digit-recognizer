@@ -65,16 +65,16 @@ class CanvasWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setGeometry(600,200,1100,600) #sets window to appear 600 pixels from the left and 200 from the top with a size of 1100 x 550 
-        self.Hlayout = QHBoxLayout(self)
+        self.Hlayout = QHBoxLayout()
         self.setLayout(self.Hlayout) #fix these 2 lines to prevent error from popping
         self.canvas = Canvas()
-        self.predictBox = QtWidgets.QFrame(self) 
+        self.predictBox = QtWidgets.QFrame() 
         self.predictBox.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
-        self.numberSet = QHBoxLayout(self)
+        self.numberSet = QHBoxLayout()
         for number in range(0,10):
             self.numberSet.addWidget(QtWidgets.QLabel("%d" %number))
         self.numberSet.setAlignment(Qt.AlignCenter)
-        self.probabilityBox = QVBoxLayout(self)
+        self.probabilityBox = QVBoxLayout()
         temp_label = QtWidgets.QLabel("Please draw a number and then press the recognize button.")
         self.prob_label = QtWidgets.QLabel("Hidden label", self)
         self.prob_label.clear()
@@ -86,7 +86,7 @@ class CanvasWindow(QWidget):
         self.clearButton = QPushButton("Clear Canvas")
         self.recogButton = QPushButton('Recognize Number')
         self.exit = QPushButton("Exit")
-        self.button_layout = QVBoxLayout(self)
+        self.button_layout = QVBoxLayout()
         self.button_layout.addWidget(self.clearButton)
         self.button_layout.addWidget(self.recogButton)
         self.button_layout.addWidget(self.predictBox)
