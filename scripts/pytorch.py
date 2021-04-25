@@ -61,8 +61,8 @@ def train(epoch):
         loss = criterion(predictions, labels) # calculate loss by comparing prediction to actual label
         loss.backward() # backward pass
         optimizer.step() # use optimizer to modify model parameters
-        # if batch_idx % 100 == 0:  
-        #     print('Train Epoch: {} | Batch Status: {}/{} ({:.0f}%) | Loss: {:.6f}'.format(epoch, batch_idx*len(images), len(train_loader.dataset), 100.*batch_idx/len(train_loader), loss.item()))
+        if batch_idx % 100 == 0:  
+            print('Train Epoch: {} | Batch Status: {}/{} ({:.0f}%) | Loss: {:.6f}'.format(epoch, batch_idx*len(images), len(train_loader.dataset), 100.*batch_idx/len(train_loader), loss.item()))
 
 def test():
     '''Testing the Model'''
@@ -110,11 +110,11 @@ def predict(tensor, model):
 
 def showMNISTExamples():
     '''When called, it plots and saves 10 random samples from MNIST dataset with its label'''
-    fig=plt.figure()
-    for i in range(1, 11): # 10 images
+    fig=plt.figure(figsize=(12,12))
+    for i in range(1, 50): # 10 images
         idx = random.randint(0, 60000)	
         x, label = train_dataset[idx] # x is a torch.Tensor (image) of size [1,28,28]
-        fig.add_subplot(2, 5, i) # 2 rows 5 cols
+        fig.add_subplot(7, 7, i) # 2 rows 5 cols
         plt.title('{}'.format(label))
         plt.axis('off')
         plt.imshow(x.numpy().squeeze(), cmap='gray')
@@ -126,11 +126,11 @@ def plot_probabilities(tensor, probab):
     fig, (ax0,ax1, ax2) = plt.subplots(figsize=(5,4), ncols=3)
     img = cv.imread('digit.jpg')
     ax0.imshow(img) # original image.
-    ax0.set_title('Input')
+    ax0.set_title('Handwriting')
     ax0.axis('off')
     ax1.imshow(tensor.cpu().resize_(1, 28, 28).numpy().squeeze(), cmap='gray') # transfor tensor to show on screen
     ax1.axis('off')
-    ax1.set_title('Tensor')
+    ax1.set_title('Tensor Input to Model')
     ax2.barh(np.arange(10), probab) # plot probability array
     ax2.set_aspect(0.1)
     ax2.set_yticks(np.arange(10))

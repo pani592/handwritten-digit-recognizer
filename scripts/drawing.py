@@ -11,7 +11,7 @@ from PIL import Image, ImageQt, ImageOps
 class Canvas(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)  # or instead use: super().__init__() 
-        self.image = QImage(500, 500, QImage.Format_Grayscale8)   # initially did Format_RGB32 but MNIST is 8bit grayscale so this improves accuracy.
+        self.image = QImage(550, 600, QImage.Format_Grayscale8)   # initially did Format_RGB32 but MNIST is 8bit grayscale so this improves accuracy.
         self.blankCanvas()   # instantiate QPointerPath and sets white background
         self.penWidth = 30   # large pen width for better accuracy
         self.penColour = Qt.black
@@ -41,7 +41,7 @@ class Canvas(QWidget):
 
     # # Widget size
     def sizeHint(self): 
-        return QSize(500, 500)
+        return QSize(550, 600)
 
     def saveImage(self):
         image = ImageQt.fromqimage(self.image) # PIL to manipulate image before save
@@ -64,7 +64,7 @@ class Canvas(QWidget):
 class CanvasWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setGeometry(600,200,1100,550) #sets window to appear 600 pixels from the left and 200 from the top with a size of 1100 x 550 
+        self.setGeometry(600,200,1100,600) #sets window to appear 600 pixels from the left and 200 from the top with a size of 1100 x 550 
         self.Hlayout = QHBoxLayout(self)
         self.setLayout(self.Hlayout) #fix these 2 lines to prevent error from popping
         self.canvas = Canvas()

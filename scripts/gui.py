@@ -42,12 +42,12 @@ class UI(QWidget):
         self.layout.itemAt(0).widget().deleteLater()
 
     def Model1(self):
-        self.NewWin1 = SecWin()
-        self.NewWin1.initModel1()
+        self.NewWin1 = Model1()
+        self.NewWin1.initModel()
     
     def Model2(self):
-        self.NewWin2 = SecWin()
-        self.NewWin2.initModel2()
+        self.NewWin2 = Model1()
+        self.NewWin2.initModel()
 
     def clickExit(self):
         self.close()
@@ -56,20 +56,12 @@ class UI(QWidget):
 box_text = QVBoxLayout()
 box_text.setAlignment(Qt.AlignTop)
 
-class SecWin(QWidget):
+class Model1(QWidget):
     def __init__(self):
         super().__init__()
         self.setGeometry(200,200,500,300) #sets window to appear 600 pixels from the left and 600 from the top with a size of 300 x 300
         self.Vlayout = QVBoxLayout(self)
-        self.setLayout(self.Vlayout)
-        # self.menubar = QMenuBar(self)
-        # mFile = self.menubar.addMenu("File")
-        # mFile.addAction("Quit", self.clickExit)
-        # mView = self.menubar.addMenu("View")
-        # mView.addAction("View Training Dataset Examples", self.viewExample)
-        # mView.addAction("View Testing Dataset Examples")
-        # self.menubar.addMenu("Help")
-        # self.Vlayout.addWidget(self.menubar) 
+        self.setLayout(self.Vlayout) 
         self.box = QtWidgets.QFrame(self) 
         self.box.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
         progress_label = QtWidgets.QLabel("First, press 'TRAIN MODEL' to begin training!")
@@ -79,36 +71,41 @@ class SecWin(QWidget):
         self.bar.setMaximum(100)
         self.b2 = QPushButton("Train Model")
         self.b3 = QPushButton("Test Model")
+        self.bMnist = QPushButton("MNIST Examples")
         self.b4 = QPushButton("Exit")
         self.button_layout = QHBoxLayout(self)
         self.button_layout.addWidget(self.b2)
         self.button_layout.addWidget(self.b3)
+        self.button_layout.addWidget(self.bMnist)
         self.button_layout.addWidget(self.b4)
         self.b3.setEnabled(False)
         self.Vlayout.addWidget(self.box)
         self.Vlayout.addWidget(self.bar)
         self.Vlayout.addLayout(self.button_layout)
         self.b4.clicked.connect(self.clickExit)
+        
+        self.bMnist.clicked.connect(self.viewExample)
 
-    def initModel1(self):
+    def initModel(self):
         '''
         Used for when model 1 is selected
         '''
         self.setWindowTitle("Model 1") #sets title of the window
+        self.train_thread1 = TrainThread1()
+        self.test_thread1 = TestThread1()
         self.b2.clicked.connect(self.train_model1)
         self.b3.clicked.connect(self.test_model1)
         self.show()
 
     def train_model1(self):
         self.b2.setEnabled(False)
-        label_train = QtWidgets.QLabel("Model is being trained... see progress below")
+        label_train = QtWidgets.QLabel("Model is being trained... see progress below.")
         box_text.addWidget(label_train)
         self.box.setLayout(box_text)
-        self.train_thread1 = TrainThread1()
         self.train_thread1.task_fin.connect(self.setValue)
         self.train_thread1.start()
         self.train_thread1.finished.connect(self.updateTrain1)
-        self.b3.setEnabled(True)
+        
 
     def setValue(self, value):
         self.bar.setValue(value)
@@ -117,12 +114,12 @@ class SecWin(QWidget):
         label_train_cmp = QtWidgets.QLabel("Model training is complete. Press TEST MODEL for testing.")
         box_text.addWidget(label_train_cmp)
         self.box.setLayout(box_text)
+        self.b3.setEnabled(True)
     
     def test_model1(self):
         label_test = QtWidgets.QLabel("Model is being tested...")
         box_text.addWidget(label_test)
         self.box.setLayout(box_text)
-        self.test_thread1 = TestThread1()
         self.test_thread1.task_fin.connect(self.setValue)
         self.test_thread1.start()
         self.test_thread1.finished.connect(self.updateTest1)
@@ -155,11 +152,122 @@ class SecWin(QWidget):
             box_text.itemAt(i).widget().deleteLater()
 
     def viewExample(self):
-        exampleWin = TrainImages()
-        exampleWin.initExample()
+        self.exampleWin = TrainImages()
+        self.exampleWin.initExample()
 
     def clickExit(self):
         self.clearLayout()
+        if self.train_thread1.isRunning():
+            self.train_thread1.terminate()
+        if self.test_thread1.isRunning():
+            self.test_thread1.terminate()
+        self.close()
+
+class Model2(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setGeometry(200,200,500,300) #sets window to appear 600 pixels from the left and 600 from the top with a size of 300 x 300
+        self.Vlayout = QVBoxLayout(self)
+        self.setLayout(self.Vlayout) 
+        self.box = QtWidgets.QFrame(self) 
+        self.box.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
+        progress_label = QtWidgets.QLabel("First, press 'TRAIN MODEL' to begin training!")
+        box_text.addWidget(progress_label)
+        self.box.setLayout(box_text)
+        self.bar = QProgressBar(self)
+        self.bar.setMaximum(100)
+        self.b2 = QPushButton("Train Model")
+        self.b3 = QPushButton("Test Model")
+        self.bMnist = QPushButton("MNIST Examples")
+        self.b4 = QPushButton("Exit")
+        self.button_layout = QHBoxLayout(self)
+        self.button_layout.addWidget(self.b2)
+        self.button_layout.addWidget(self.b3)
+        self.button_layout.addWidget(self.bMnist)
+        self.button_layout.addWidget(self.b4)
+        self.b3.setEnabled(False)
+        self.Vlayout.addWidget(self.box)
+        self.Vlayout.addWidget(self.bar)
+        self.Vlayout.addLayout(self.button_layout)
+        self.b4.clicked.connect(self.clickExit)
+        
+        self.bMnist.clicked.connect(self.viewExample)
+
+    def initModel(self):
+        '''
+        Used for when model 1 is selected
+        '''
+        self.setWindowTitle("Model 1") #sets title of the window
+        self.train_thread1 = TrainThread1()
+        self.test_thread1 = TestThread1()
+        self.b2.clicked.connect(self.train_model1)
+        self.b3.clicked.connect(self.test_model1)
+        self.show()
+
+    def train_model1(self):
+        self.b2.setEnabled(False)
+        label_train = QtWidgets.QLabel("Model is being trained... see progress below.")
+        box_text.addWidget(label_train)
+        self.box.setLayout(box_text)
+        self.train_thread1.task_fin.connect(self.setValue)
+        self.train_thread1.start()
+        self.train_thread1.finished.connect(self.updateTrain1)
+        
+
+    def setValue(self, value):
+        self.bar.setValue(value)
+
+    def updateTrain1(self):
+        label_train_cmp = QtWidgets.QLabel("Model training is complete. Press TEST MODEL for testing.")
+        box_text.addWidget(label_train_cmp)
+        self.box.setLayout(box_text)
+        self.b3.setEnabled(True)
+    
+    def test_model1(self):
+        label_test = QtWidgets.QLabel("Model is being tested...")
+        box_text.addWidget(label_test)
+        self.box.setLayout(box_text)
+        self.test_thread1.task_fin.connect(self.setValue)
+        self.test_thread1.start()
+        self.test_thread1.finished.connect(self.updateTest1)
+
+    def updateTest1(self):
+        global Accuracy1
+        label_test_cmp = QLabel("Model testing is complete. Accuracy: %0.2f%% " % Accuracy1)
+        box_text.addWidget(label_test_cmp)
+        self.box.setLayout(box_text)
+        self.button_layout.itemAt(0).widget().deleteLater()
+        self.button_layout.itemAt(1).widget().deleteLater()
+        self.b5 = QPushButton("Drawing Canvas")
+        self.b5.clicked.connect(self.drawingButton)
+        self.button_layout.insertWidget(0,self.b5)
+
+    def drawingButton(self):
+        self.newCanvas = CanvasWindow()
+        self.newCanvas.initUI()
+
+    def initModel2(self):
+        '''
+        Used for when model 2 is selected
+        '''
+        self.setWindowTitle("Model 2") #sets title of the window
+        self.show()
+
+    def clearLayout(self):
+        for i in reversed(range(box_text.count())): 
+            print(i)
+            box_text.itemAt(i).widget().deleteLater()
+
+    def viewExample(self):
+        self.exampleWin = TrainImages()
+        self.exampleWin.initExample()
+
+    def clickExit(self):
+        self.clearLayout()
+        if self.train_thread1.isRunning():
+            self.train_thread1.terminate()
+        if self.test_thread1.isRunning():
+            self.test_thread1.terminate()
         self.close()
 
 class TrainThread1(QThread):
@@ -187,23 +295,42 @@ class TestThread1(QThread):
         time.sleep(0.2)
         self.task_fin.emit(100)
 
-class TrainImages(QtWidgets.QDialog):
+class TrainImages(QWidget):
     def __init__(self):
         super().__init__()
-        # self.setGeometry(200,200,500,300)
-        # mnistLayout = QVBoxLayout()
-        # exampleLab = QtWidgets.QLabel()
-        # examplesImage = QImage(r'script/mnist_examples.jpg')
-        # exampleLab.setPixmap(QPixmap.fromImage(examplesImage))
-        # mnistLayout.addWidget(exampleLab)
-        self.exitBut = QPushButton("Exit")
-        self.exitBut.clicked.connect(self.close)
-        # mnistLayout.addWidget(self.exitBut)
+        self.setGeometry(100,100,800,600)
+        mnistLayout = QVBoxLayout()
+        buttons_mnist = QHBoxLayout()
+        self.exampleLab = QtWidgets.QLabel(self)
+        examplesImage = QPixmap('mnist_examples.jpg')
+        self.exampleLab.setPixmap(examplesImage)
+        sizeP = self.exampleLab.sizePolicy()
+        sizeP.setHorizontalPolicy(QtWidgets.QSizePolicy.Maximum)
+        self.exampleLab.setSizePolicy(sizeP)
+        mnistLayout.addWidget(self.exampleLab)
+        self.nextBut = QPushButton("Next Set", self)
+        self.exitBut = QPushButton("Exit", self)
+        self.nextBut.clicked.connect(self.nextRand)
+        self.exitBut.clicked.connect(self.exitButton)
+        buttons_mnist.addWidget(self.nextBut)
+        buttons_mnist.addWidget(self.exitBut)
         self.layout = QVBoxLayout()
-        self.layout.addWidget(self.exitBut)
+        # self.layout.addWidget(self.exitBut)
+        self.layout.addLayout(mnistLayout)
+        self.layout.addLayout(buttons_mnist)
+        self.setLayout(self.layout)
     
     def initExample(self):
         self.show()
+
+    def nextRand(self):
+        showMNISTExamples()
+        examplesImage = QPixmap('mnist_examples.jpg')
+        self.exampleLab.setPixmap(examplesImage)
+
+    def exitButton(self):
+        self.close()
+
 
 
 def window():
