@@ -146,12 +146,15 @@ class ModelWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Model Trainer") 
-        self.setGeometry(200,200,700,500) # 600 pixels from the left, 600 from the top, size of 300 x 300
+        self.setGeometry(200,200,600,300) # 600 pixels from the left, 600 from the top, size of 300 x 300
         self.Vlayout = QVBoxLayout()
         self.setLayout(self.Vlayout) 
         self.box = QtWidgets.QFrame() 
         self.box.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
+        self.font = QFont()
+        self.font.setPointSize(15)
         progress_label = QtWidgets.QLabel("First, press 'TRAIN MODEL' to begin training!")
+        progress_label.setFont(self.font)
         self.box_text = QVBoxLayout()
         self.box_text.setAlignment(Qt.AlignTop)
         self.box_text.addWidget(progress_label)
@@ -182,6 +185,7 @@ class ModelWindow(QWidget):
     def train_model(self):
         self.b2.setEnabled(False)
         label_train = QtWidgets.QLabel("Model is being trained... see progress below.")
+        label_train.setFont(self.font)
         self.box_text.addWidget(label_train)
         self.box.setLayout(self.box_text)
         self.train_thread.task_fin.connect(self.setValue)
@@ -193,12 +197,14 @@ class ModelWindow(QWidget):
 
     def updateTrain(self):
         label_train_cmp = QtWidgets.QLabel("Model training is complete. Press TEST MODEL for testing.")
+        label_train_cmp.setFont(self.font)
         self.box_text.addWidget(label_train_cmp)
         self.box.setLayout(self.box_text)
         self.b3.setEnabled(True)
     
     def test_model(self):
         label_test = QtWidgets.QLabel("Model is being tested...")
+        label_test.setFont(self.font)
         self.box_text.addWidget(label_test)
         self.box.setLayout(self.box_text)
         self.test_thread.task_fin.connect(self.setValue)
@@ -208,6 +214,7 @@ class ModelWindow(QWidget):
     def updateTest(self):
         global Accuracy1
         label_test_cmp = QLabel("Model testing is complete. Accuracy: %0.2f%% " % Accuracy1)
+        label_test_cmp.setFont(self.font)
         self.box_text.addWidget(label_test_cmp)
         self.box.setLayout(self.box_text)
         self.button_layout.itemAt(0).widget().deleteLater()
@@ -271,7 +278,6 @@ class TrainThread(QThread):
     task_fin = pyqtSignal(int)
 
     def run(self):
-        self.task_fin.emit(1)
         for epoch in range(1,21):  # 20 epochs
             train(epoch = epoch)
             time.sleep(0.3)
