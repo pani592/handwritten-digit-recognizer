@@ -4,5 +4,4 @@
 ## Last updated: 28 April
 
 from gui import view_UI
-
 view_UI()

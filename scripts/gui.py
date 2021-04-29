@@ -11,13 +11,13 @@ from PyQt5 import QtWidgets
 from PyQt5.QtGui import *
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QGridLayout, QProgressBar, QLineEdit, QHBoxLayout, QFrame, QMenuBar
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QGridLayout, QProgressBar, QLineEdit, QHBoxLayout, QFrame, QMenuBar, QComboBox
 from PyQt5.QtGui import QPainterPath, QPainter, QImage, QPen, QPixmap
 
 class Canvas(QWidget):
-    ''' Class for the drawing canvas functionality, as well as performing primary image manipulation and saving image'''
+    '''Canvas is the Drawing canvas implementation. Also performs some primary image manipulation and saving image'''
     def __init__(self, parent=None):
-        QWidget.__init__(self, parent)  # or instead use: super().__init__() 
+        super().__init__() 
         self.image = QImage(550, 600, QImage.Format_Grayscale8)   # initially did Format_RGB32 but MNIST is 8bit grayscale so this improves accuracy.
         self.blankCanvas()   # instantiate QPointerPath and sets white background
         self.penWidth = 30   # large pen width for better accuracy
@@ -65,13 +65,14 @@ class Canvas(QWidget):
         image.save('digit.jpg') # save as jpg
         image = image.resize((20, 20), Image.ANTIALIAS) # resize to 20x20 with a high-quality downsampling filter
         image.save('digit_inv_20x20.jpg') # save as jpg
-
         self.blankCanvas() # when image is saved, the canvas is cleared
 
 class CanvasWindow(QWidget):
-    ''' defines GUI for the Canvas and adds features like a recognise button which saves image and display prediction, and clear canvas button'''
+    ''' CanvasWindow is the Window on which the canvas is placed. Adds features such as recognise button for displaying the image and prediction.'''
     def __init__(self):
         super().__init__()
+        self.font = QFont()
+        self.font.setPointSize(15)
         self.setGeometry(600,200,1100,600) #sets window to appear 600 pixels from the left and 200 from the top with a size of 1100 x 600 
         self.Hlayout = QHBoxLayout()
         self.setLayout(self.Hlayout) 
@@ -81,6 +82,7 @@ class CanvasWindow(QWidget):
         self.numberSet = QHBoxLayout()
         for number in range(0,10):
             self.numberSet.addWidget(QtWidgets.QLabel("%d" %number))  # displays all 10 digits in a line for better visual effect
+            QtWidgets.QLabel("%d" %number).setFont(self.font)
         self.numberSet.setAlignment(Qt.AlignCenter)
         self.probabilityBox = QVBoxLayout()
         temp_label = QtWidgets.QLabel("Please draw a number and then press the recognize button.")
@@ -141,8 +143,46 @@ class CanvasWindow(QWidget):
     def clickExit(self):
         self.close()
 
-class ModelWindow(QWidget):
-    ''' Initial screen/window displayed. Contains buttons to train dataset, test dataset, and open windows to show MNIST examples, and access drawing canvas window'''
+class MNISTImages(QWidget):
+    ''' MNISTImages is the window for displaying MNIST training images, with a button to display the next set'''
+    def __init__(self):
+        super().__init__()
+        self.setGeometry(100,100,800,700)
+        mnistLayout = QVBoxLayout()
+        buttons_mnist = QHBoxLayout()
+        self.exampleLab = QtWidgets.QLabel(self)
+        examplesImage = QPixmap('mnist_examples.jpg')  # this is the jpg that is displayed on the window
+        self.exampleLab.setPixmap(examplesImage)
+        sizeP = self.exampleLab.sizePolicy()
+        sizeP.setHorizontalPolicy(QtWidgets.QSizePolicy.Maximum)
+        self.exampleLab.setSizePolicy(sizeP)
+        mnistLayout.addWidget(self.exampleLab)
+        self.nextBut = QPushButton("Next Set", self)
+        self.exitBut = QPushButton("Exit", self)
+        self.nextBut.clicked.connect(self.nextRand)
+        self.exitBut.clicked.connect(self.exitButton)
+        buttons_mnist.addWidget(self.nextBut)
+        buttons_mnist.addWidget(self.exitBut)
+        self.layout = QVBoxLayout()
+        self.layout.addLayout(mnistLayout)
+        self.layout.addLayout(buttons_mnist)
+        self.setLayout(self.layout)
+    
+    def initExample(self):
+        self.show()
+
+    def nextRand(self):
+        show_MNIST_examples() # when this function is called, a new set of 64 examples from MNIST dataset is saved to files
+        examplesImage = QPixmap('mnist_examples.jpg')
+        self.exampleLab.setPixmap(examplesImage)
+
+    def exitButton(self):
+        self.close()
+
+model_choice = 1
+class MainWindow(QWidget):
+    ''' MainWindow is the primary screen/window displayed. Contains buttons to train dataset, test dataset, 
+        and open separate windows to show MNIST examples, and access the drawing canvas window '''
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Model Trainer") 
@@ -174,6 +214,12 @@ class ModelWindow(QWidget):
         self.Vlayout.addWidget(self.box)
         self.Vlayout.addWidget(self.bar)
         self.Vlayout.addLayout(self.button_layout)
+        
+        self.cb = QComboBox() # Give user the option to select models
+        self.cb.addItems(["Model 1", "Model 2"])
+        self.cb.currentIndexChanged.connect(self.select_model)
+        self.Vlayout.addWidget(self.cb)       
+    
         self.b4.clicked.connect(self.clickExit)
         self.bMnist.clicked.connect(self.viewExample)
         self.train_thread = TrainThread()
@@ -182,6 +228,10 @@ class ModelWindow(QWidget):
         self.b3.clicked.connect(self.test_model)
         self.show()
 
+    def select_model(self,i):
+        global model_choice
+        model_choice = i+1
+    
     def train_model(self):
         self.b2.setEnabled(False)
         label_train = QtWidgets.QLabel("Model is being trained... see progress below.")
@@ -228,7 +278,7 @@ class ModelWindow(QWidget):
         self.newCanvas.initUI()  # displays new window with drawing canvas and prediction screen
 
     def viewExample(self):
-        self.exampleWin = TrainImages()
+        self.exampleWin = MNISTImages()
         self.exampleWin.initExample()
 
     def clickExit(self):
@@ -238,48 +288,13 @@ class ModelWindow(QWidget):
             self.test_thread.terminate()
         self.close()
 
-class TrainImages(QWidget):
-    ''' Window to display MNIST training images, by displaying on a window the saved examples, with a button to display the next set'''
-    def __init__(self):
-        super().__init__()
-        self.setGeometry(100,100,800,700)
-        mnistLayout = QVBoxLayout()
-        buttons_mnist = QHBoxLayout()
-        self.exampleLab = QtWidgets.QLabel(self)
-        examplesImage = QPixmap('mnist_examples.jpg')  # this is the jpg that is displayed on the window
-        self.exampleLab.setPixmap(examplesImage)
-        sizeP = self.exampleLab.sizePolicy()
-        sizeP.setHorizontalPolicy(QtWidgets.QSizePolicy.Maximum)
-        self.exampleLab.setSizePolicy(sizeP)
-        mnistLayout.addWidget(self.exampleLab)
-        self.nextBut = QPushButton("Next Set", self)
-        self.exitBut = QPushButton("Exit", self)
-        self.nextBut.clicked.connect(self.nextRand)
-        self.exitBut.clicked.connect(self.exitButton)
-        buttons_mnist.addWidget(self.nextBut)
-        buttons_mnist.addWidget(self.exitBut)
-        self.layout = QVBoxLayout()
-        self.layout.addLayout(mnistLayout)
-        self.layout.addLayout(buttons_mnist)
-        self.setLayout(self.layout)
-    
-    def initExample(self):
-        self.show()
-
-    def nextRand(self):
-        show_MNIST_examples() # when this function is called, a new set of 64 examples from MNIST dataset is saved to files
-        examplesImage = QPixmap('mnist_examples.jpg')
-        self.exampleLab.setPixmap(examplesImage)
-
-    def exitButton(self):
-        self.close()
-
 class TrainThread(QThread):
     task_fin = pyqtSignal(int)
-
     def run(self):
-        for epoch in range(1,21):  # 20 epochs
-            train(epoch = epoch)
+        global model_choice
+        self.task_fin.emit(1)
+        for epoch in range(1,2):  # 20 epochs
+            train(epoch = epoch, input = model_choice)
             time.sleep(0.3)
             self.task_fin.emit(epoch*5) # progress bar updates in steps of 5%
 
@@ -287,8 +302,9 @@ Accuracy1 = 0
 class TestThread(QThread):
     task_fin = pyqtSignal(int)
     def run(self):
+        global model_choice
         global Accuracy1
-        tmp_acc = test()
+        tmp_acc = test(input = model_choice)
         Accuracy1 = tmp_acc*100
         time.sleep(0.2)
         self.task_fin.emit(100)
@@ -299,17 +315,19 @@ class recogThread(QThread):
 
     def run(self):
         global predicted_num
-        predicted_num, probab = recognize()
+        global model_choice
+        predicted_num, probab = recognize(input=model_choice)
 
 def view_UI():
     ''' The main function that is called to instantiate the window and start the system'''
     app = QApplication(sys.argv)
-    win = ModelWindow()
+    win = MainWindow()
     win.show()
     sys.exit(app.exec_())
 
 def drawing_canvas():
     ''' When this function is called, the drawing window alone is generated. Useful for testing.'''
+    app = QApplication(sys.argv)
     win = CanvasWindow()
     win.show()
     sys.exit(app.exec_())
