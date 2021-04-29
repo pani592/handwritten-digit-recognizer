@@ -71,21 +71,31 @@ class CanvasWindow(QWidget):
     ''' CanvasWindow is the Window on which the canvas is placed. Adds features such as recognise button for displaying the image and prediction.'''
     def __init__(self):
         super().__init__()
+        # created font to use on the numbers displayed
         self.font = QFont()
         self.font.setPointSize(15)
         self.setGeometry(600,200,1100,600) #sets window to appear 600 pixels from the left and 200 from the top with a size of 1100 x 600 
+
+        # setting layout for current widget
         self.Hlayout = QHBoxLayout()
-        self.setLayout(self.Hlayout) 
-        self.canvas = Canvas()
+        self.setLayout(self.Hlayout)
+
+        # setting up a Canvas widget class and box that changes text after button presses
+        self.canvas = Canvas() 
         self.predictBox = QtWidgets.QFrame() 
         self.predictBox.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
+
+        # set up for horizontal line of numbers
         self.numberSet = QHBoxLayout()
         for number in range(0,10):
             self.numberSet.addWidget(QtWidgets.QLabel("%d" %number))  # displays all 10 digits in a line for better visual effect
-            QtWidgets.QLabel("%d" %number).setFont(self.font)
+            QtWidgets.QLabel("%d" %number).setFont(self.font) #setting font for each
         self.numberSet.setAlignment(Qt.AlignCenter)
+
+        # adding widgets together in VBoxLayout
         self.probabilityBox = QVBoxLayout()
         temp_label = QtWidgets.QLabel("Please draw a number and then press the recognize button.")
+        # set up temporary label where probability graph is added later
         self.prob_label = QtWidgets.QLabel("Hidden label", self)
         self.prob_label.clear()
         self.probabilityBox.addWidget(temp_label)
@@ -93,6 +103,8 @@ class CanvasWindow(QWidget):
         self.probabilityBox.addWidget(self.prob_label)
         self.probabilityBox.setAlignment(Qt.AlignTop)
         self.predictBox.setLayout(self.probabilityBox)
+
+        # adding buttons and their functionality
         self.clearButton = QPushButton("Clear Canvas")
         self.recogButton = QPushButton('Recognize Number')
         self.exit = QPushButton("Exit")
@@ -149,14 +161,17 @@ class MNISTImages(QWidget):
         super().__init__()
         self.setGeometry(100,100,800,700)
         mnistLayout = QVBoxLayout()
+        self.font = QFont()
+        self.font.setPointSize(13)
 
         # Explanation about MNIST for the user
-        text = "Here, you can view examples of what  goes into the Neural Network as it trains. \
-            \nThe dataset being used to train is the MNIST dataset, which consists of 60,000 training images and 10,000 testing images. \
-            \nThese images have been normalised and scaled to a 28x28 size image, and is passed into the Neural Network. \
-            \nPressing the 'Next Set' button shows you another set of 35 random images from the training set, so you can get an idea of the images."
+        text = "Here, you can view examples of what  goes into the Neural Network as it trains. " + \
+            "The dataset being used to train is the MNIST dataset, which consists of 60,000 training images and 10,000 testing images. " + \
+            "These images have been normalised and scaled to a 28x28 size image, and is passed into the Neural Network. " + \
+            "Pressing the 'Next Set' button shows you another set of 35 random images from the training set, so you can get an idea of the images. "
         self.label1 = QLabel(text)
         self.label1.setWordWrap(True)
+        self.label1.setFont(self.font)
         mnistLayout.addWidget(self.label1)
 
         buttons_mnist = QHBoxLayout()
@@ -208,7 +223,8 @@ class MainWindow(QWidget):
 
         # add combobox to allow user to select between different models
         self.cb = QComboBox() 
-        self.cb.addItems(["Model 1", "Model 2"])
+        self.cb.addItem("Convolutional Neural Net", 1)
+        self.cb.addItem("Feedforward Neural Network", 2)
         self.cb.currentIndexChanged.connect(self.select_model)
         self.Vlayout.addWidget(self.cb)   
 
@@ -226,13 +242,17 @@ class MainWindow(QWidget):
         self.b2 = QPushButton("Train Model")
         self.b3 = QPushButton("Test Model")
         self.bMnist = QPushButton("MNIST Examples")
+        self.canvasButton = QPushButton("Canvas")
+        self.canvasButton.clicked.connect(self.drawingButton)
         self.b4 = QPushButton("Exit")
         self.button_layout = QHBoxLayout()
         self.button_layout.addWidget(self.b2)
         self.button_layout.addWidget(self.b3)
+        self.button_layout.addWidget(self.canvasButton)
         self.button_layout.addWidget(self.bMnist)
         self.button_layout.addWidget(self.b4)
         self.b3.setEnabled(False)
+        self.canvasButton.setEnabled(False)
         self.Vlayout.addWidget(self.box)
         self.Vlayout.addWidget(self.bar)
         self.Vlayout.addLayout(self.button_layout)
@@ -254,7 +274,18 @@ class MainWindow(QWidget):
     # connected to the combox which updates what model is being used
     def select_model(self,i):
         global model_choice
-        model_choice = i+1
+        model_choice = self.cb.itemData(i)
+        self.b2.setEnabled(True)
+        self.canvasButton.setEnabled(False)
+        self.clear()
+        self.clear()
+        model_name = self.cb.itemText(i)
+        newText = "You have selected the " + model_name + \
+        " model. Press the TRAIN MODEL button below to continue."
+        newModel = QLabel(newText)
+        newModel.setFont(self.font)
+        newModel.setWordWrap(True)
+        self.box_text.addWidget(newModel)
     
     # connected to the train model button, calls train() function from model.py
     def train_model(self):
@@ -295,11 +326,14 @@ class MainWindow(QWidget):
         label_test_cmp.setFont(self.font)
         self.box_text.addWidget(label_test_cmp)
         self.box.setLayout(self.box_text)
-        self.button_layout.itemAt(0).widget().deleteLater()
-        self.button_layout.itemAt(1).widget().deleteLater()
-        self.b5 = QPushButton("Drawing Canvas")
-        self.b5.clicked.connect(self.drawingButton)
-        self.button_layout.insertWidget(0,self.b5)
+        self.b2.setEnabled(False)
+        self.b3.setEnabled(False)
+        self.canvasButton.setEnabled(True)
+        # self.button_layout.itemAt(0).widget().deleteLater()
+        # self.button_layout.itemAt(1).widget().deleteLater()
+        # self.b5 = QPushButton("Drawing Canvas")
+        # self.b5.clicked.connect(self.drawingButton)
+        # self.button_layout.insertWidget(0,self.b5)
 
     # new button to link to the next window, the drawing canvas
     def drawingButton(self):
@@ -310,6 +344,15 @@ class MainWindow(QWidget):
     def viewExample(self):
         self.exampleWin = MNISTImages()
         self.exampleWin.initExample()
+
+    def clear(self):
+        for i in range(0,10):
+            if self.box_text.itemAt(i) is not None:
+                self.box_text.itemAt(i).widget().deleteLater()
+        if self.train_thread.isRunning():
+            self.train_thread.terminate()
+        if self.test_thread.isRunning():
+            self.test_thread.terminate()
 
     def clickExit(self):
         if self.train_thread.isRunning():
