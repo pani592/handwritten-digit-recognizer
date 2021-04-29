@@ -3,7 +3,6 @@
 # Authors: Paulse Anithottam, Sidharth Varma
 # Last updated: 28 April
 # imports
-from __future__ import print_function
 from torch import nn, optim, cuda, Tensor
 from torch.utils import data
 from torchvision import datasets, transforms
@@ -123,8 +122,8 @@ def test(input):
                 confusion_matrix[t.long(), p.long()] += 1
         correct += pred.eq(labels.data.view_as(pred)).cpu().sum()
     test_loss /= len(test_loader.dataset)
-    # print(len(test_loader.dataset))
-    # print(confusion_matrix)
+    print(len(test_loader.dataset))
+    print(confusion_matrix)
     return correct/len(test_loader.dataset)
 
 def show_MNIST_examples():

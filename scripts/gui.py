@@ -149,6 +149,16 @@ class MNISTImages(QWidget):
         super().__init__()
         self.setGeometry(100,100,800,700)
         mnistLayout = QVBoxLayout()
+
+        # Explanation about MNIST for the user
+        text = "Here, you can view examples of what  goes into the Neural Network as it trains. \
+            \nThe dataset being used to train is the MNIST dataset, which consists of 60,000 training images and 10,000 testing images. \
+            \nThese images have been normalised and scaled to a 28x28 size image, and is passed into the Neural Network. \
+            \nPressing the 'Next Set' button shows you another set of 35 random images from the training set, so you can get an idea of the images."
+        self.label1 = QLabel(text)
+        self.label1.setWordWrap(True)
+        mnistLayout.addWidget(self.label1)
+
         buttons_mnist = QHBoxLayout()
         self.exampleLab = QtWidgets.QLabel(self)
         examplesImage = QPixmap('mnist_examples.jpg')  # this is the jpg that is displayed on the window
@@ -185,20 +195,32 @@ class MainWindow(QWidget):
         and open separate windows to show MNIST examples, and access the drawing canvas window '''
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Model Trainer") 
-        self.setGeometry(200,200,600,300) # 600 pixels from the left, 600 from the top, size of 300 x 300
+        self.setWindowTitle("HandRite Home") 
+        self.setGeometry(200,200,625,400) 
         self.Vlayout = QVBoxLayout()
-        self.setLayout(self.Vlayout) 
+        self.setLayout(self.Vlayout)
+
+        # style settings
         self.box = QtWidgets.QFrame() 
         self.box.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
         self.font = QFont()
-        self.font.setPointSize(15)
-        progress_label = QtWidgets.QLabel("First, press 'TRAIN MODEL' to begin training!")
-        progress_label.setFont(self.font)
+        self.font.setPointSize(15) 
+
+        # add combobox to allow user to select between different models
+        self.cb = QComboBox() 
+        self.cb.addItems(["Model 1", "Model 2"])
+        self.cb.currentIndexChanged.connect(self.select_model)
+        self.Vlayout.addWidget(self.cb)   
+
+        # Text box to communicate output
         self.box_text = QVBoxLayout()
         self.box_text.setAlignment(Qt.AlignTop)
+        progress_label = QtWidgets.QLabel("Select a model above, and press TRAIN MODEL!")
+        progress_label.setFont(self.font)
         self.box_text.addWidget(progress_label)
         self.box.setLayout(self.box_text)
+
+        # progress bar and buttons
         self.bar = QProgressBar()
         self.bar.setMaximum(100)
         self.b2 = QPushButton("Train Model")
@@ -214,12 +236,13 @@ class MainWindow(QWidget):
         self.Vlayout.addWidget(self.box)
         self.Vlayout.addWidget(self.bar)
         self.Vlayout.addLayout(self.button_layout)
-        
-        self.cb = QComboBox() # Give user the option to select models
-        self.cb.addItems(["Model 1", "Model 2"])
-        self.cb.currentIndexChanged.connect(self.select_model)
-        self.Vlayout.addWidget(self.cb)       
     
+        # display the logo of the team
+        logo = QtWidgets.QLabel()
+        logo.setStyleSheet("QWidget {background-image: url(logo1.jpg)}")
+        self.Vlayout.addWidget(logo)
+
+        # define what function each button connects to
         self.b4.clicked.connect(self.clickExit)
         self.bMnist.clicked.connect(self.viewExample)
         self.train_thread = TrainThread()
@@ -228,13 +251,15 @@ class MainWindow(QWidget):
         self.b3.clicked.connect(self.test_model)
         self.show()
 
+    # connected to the combox which updates what model is being used
     def select_model(self,i):
         global model_choice
         model_choice = i+1
     
+    # connected to the train model button, calls train() function from model.py
     def train_model(self):
         self.b2.setEnabled(False)
-        label_train = QtWidgets.QLabel("Model is being trained... see progress below.")
+        label_train = QtWidgets.QLabel("Training the Model... meanwhile, see examples of MNIST below.")
         label_train.setFont(self.font)
         self.box_text.addWidget(label_train)
         self.box.setLayout(self.box_text)
@@ -245,15 +270,17 @@ class MainWindow(QWidget):
     def setValue(self, value):
         self.bar.setValue(value)
 
+    # once training is complete, this function performs updates to the GUI like disabling the TRAIN button
     def updateTrain(self):
-        label_train_cmp = QtWidgets.QLabel("Model training is complete. Press TEST MODEL for testing.")
+        label_train_cmp = QtWidgets.QLabel("Model training complete! Press TEST MODEL to see results.")
         label_train_cmp.setFont(self.font)
         self.box_text.addWidget(label_train_cmp)
         self.box.setLayout(self.box_text)
         self.b3.setEnabled(True)
     
+    # Connected to the train model button
     def test_model(self):
-        label_test = QtWidgets.QLabel("Model is being tested...")
+        label_test = QtWidgets.QLabel("Testing the Model...")
         label_test.setFont(self.font)
         self.box_text.addWidget(label_test)
         self.box.setLayout(self.box_text)
@@ -261,9 +288,10 @@ class MainWindow(QWidget):
         self.test_thread.start()
         self.test_thread.finished.connect(self.updateTest)
 
+    # updates made to the GUI once testing is complete
     def updateTest(self):
         global Accuracy1
-        label_test_cmp = QLabel("Model testing is complete. Accuracy: %0.2f%% " % Accuracy1)
+        label_test_cmp = QLabel("Testing complete. Model Accuracy: %0.2f%% " % Accuracy1)
         label_test_cmp.setFont(self.font)
         self.box_text.addWidget(label_test_cmp)
         self.box.setLayout(self.box_text)
@@ -273,10 +301,12 @@ class MainWindow(QWidget):
         self.b5.clicked.connect(self.drawingButton)
         self.button_layout.insertWidget(0,self.b5)
 
+    # new button to link to the next window, the drawing canvas
     def drawingButton(self):
         self.newCanvas = CanvasWindow() # initiates drawing canvas window class instance
         self.newCanvas.initUI()  # displays new window with drawing canvas and prediction screen
 
+    # connected to the view MNIST examples button
     def viewExample(self):
         self.exampleWin = MNISTImages()
         self.exampleWin.initExample()
