@@ -90,7 +90,7 @@ class CanvasWindow(QWidget):
         for number in range(0,10):
             self.numberSet.addWidget(QtWidgets.QLabel("%d" %number))  # displays all 10 digits in a line for better visual effect
             QtWidgets.QLabel("%d" %number).setFont(self.font) #setting font for each
-        self.numberSet.setAlignment(Qt.AlignCenter)
+        self.numberSet.setAlignment(Qt.AlignCenter) # aligns the entire layout center
 
         # adding widgets together in VBoxLayout
         self.probabilityBox = QVBoxLayout()
@@ -98,13 +98,14 @@ class CanvasWindow(QWidget):
         # set up temporary label where probability graph is added later
         self.prob_label = QtWidgets.QLabel("Hidden label", self)
         self.prob_label.clear()
+        # adding the components to another sub layout 
         self.probabilityBox.addWidget(temp_label)
         self.probabilityBox.addLayout(self.numberSet)
         self.probabilityBox.addWidget(self.prob_label)
         self.probabilityBox.setAlignment(Qt.AlignTop)
         self.predictBox.setLayout(self.probabilityBox)
 
-        # adding buttons and their functionality
+        # adding buttons and connecting them to their functionality
         self.clearButton = QPushButton("Clear Canvas")
         self.recogButton = QPushButton('Recognize Number')
         self.exit = QPushButton("Exit")
@@ -120,20 +121,26 @@ class CanvasWindow(QWidget):
         self.exit.clicked.connect(self.clickExit)
 
     def initUI(self):
+        # shows the UI
         self.show()
 
     def clear(self):
+        # clears the canvas and resets the text 
         self.reset()
         self.canvas.blankCanvas()
 
     def recognizeButton(self):
+        # resets text
         self.reset()
+        # saves drawing and pushes it into the recognise QThread
         self.canvas.saveImage()
         self.recog = recogThread()
         self.recog.start()
+        # updates text after a number is recognised
         self.recog.finished.connect(self.updatePredict)
 
     def updatePredict(self):
+        # bolds text and increases text size for number recognised by model
         global predicted_num
         pre_num = QtWidgets.QLabel("%d" % predicted_num)
         bigBold = pre_num.font()
@@ -142,24 +149,31 @@ class CanvasWindow(QWidget):
         pre_num.setFont(bigBold)
         self.numberSet.itemAt(predicted_num).widget().deleteLater()
         self.numberSet.insertWidget(predicted_num,pre_num)
+        # adds the class probability image made in the view_probabilities() function
         prob_pix = QPixmap('class_prob.jpg')
         self.prob_label.setPixmap(prob_pix)
 
     def reset(self):
+        # clears class probability 
         self.prob_label.clear()
+        # deletes all the numbers in the numberSet layout to remove any bold text
         for number in range(0,10):
             self.numberSet.itemAt(number).widget().deleteLater()
+        # adds all the numbers back in regular text
         for number in range(0,10):
             self.numberSet.insertWidget(number, QtWidgets.QLabel("%d" %number))
 
     def clickExit(self):
+        # closes the drawing canvas widget
         self.close()
 
 class MNISTImages(QWidget):
     ''' MNISTImages is the window for displaying MNIST training images, with a button to display the next set'''
     def __init__(self):
         super().__init__()
+        # setting geometry
         self.setGeometry(100,100,800,700)
+        # setting layout to add widgets and font size for text
         mnistLayout = QVBoxLayout()
         self.font = QFont()
         self.font.setPointSize(13)
@@ -174,16 +188,20 @@ class MNISTImages(QWidget):
         self.label1.setFont(self.font)
         mnistLayout.addWidget(self.label1)
 
+        # layout for buttons 
         buttons_mnist = QHBoxLayout()
+        # adding image using QPixmap to QLabel
         self.exampleLab = QtWidgets.QLabel(self)
         examplesImage = QPixmap('mnist_examples.jpg')  # this is the jpg that is displayed on the window
         self.exampleLab.setPixmap(examplesImage)
-        sizeP = self.exampleLab.sizePolicy()
-        sizeP.setHorizontalPolicy(QtWidgets.QSizePolicy.Maximum)
+        sizeP = self.exampleLab.sizePolicy() 
+        sizeP.setHorizontalPolicy(QtWidgets.QSizePolicy.Maximum) # sets horizontal size policy for mnist image
         self.exampleLab.setSizePolicy(sizeP)
         mnistLayout.addWidget(self.exampleLab)
+        # creating and adding buttons to layout
         self.nextBut = QPushButton("Next Set", self)
         self.exitBut = QPushButton("Exit", self)
+        # button functionality
         self.nextBut.clicked.connect(self.nextRand)
         self.exitBut.clicked.connect(self.exitButton)
         buttons_mnist.addWidget(self.nextBut)
@@ -191,19 +209,23 @@ class MNISTImages(QWidget):
         self.layout = QVBoxLayout()
         self.layout.addLayout(mnistLayout)
         self.layout.addLayout(buttons_mnist)
-        self.setLayout(self.layout)
+        self.setLayout(self.layout) # sets widget layout
     
     def initExample(self):
+        # shows UI
         self.show()
 
     def nextRand(self):
+        # connected to "Next Set" button
         show_MNIST_examples() # when this function is called, a new set of 64 examples from MNIST dataset is saved to files
         examplesImage = QPixmap('mnist_examples.jpg')
-        self.exampleLab.setPixmap(examplesImage)
+        self.exampleLab.setPixmap(examplesImage) # replaces old set with the new set of MNIST examples
 
     def exitButton(self):
+        # closes UI window
         self.close()
 
+# global variable changed according to combobox selection
 model_choice = 1
 class MainWindow(QWidget):
     ''' MainWindow is the primary screen/window displayed. Contains buttons to train dataset, test dataset, 
@@ -212,10 +234,11 @@ class MainWindow(QWidget):
         super().__init__()
         self.setWindowTitle("HandRite Home") 
         self.setGeometry(200,200,625,400) 
+        # initialises layout
         self.Vlayout = QVBoxLayout()
         self.setLayout(self.Vlayout)
 
-        # style settings
+        # style settings for QFrame
         self.box = QtWidgets.QFrame() 
         self.box.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
         self.font = QFont()
@@ -223,6 +246,7 @@ class MainWindow(QWidget):
 
         # add combobox to allow user to select between different models
         self.cb = QComboBox() 
+        # adds option as text string followed by value connected to that button
         self.cb.addItem("Convolutional Neural Net", 1)
         self.cb.addItem("Feedforward Neural Network", 2)
         self.cb.currentIndexChanged.connect(self.select_model)
@@ -231,12 +255,13 @@ class MainWindow(QWidget):
         # Text box to communicate output
         self.box_text = QVBoxLayout()
         self.box_text.setAlignment(Qt.AlignTop)
+        # text changes when a combobox selection is changed
         progress_label = QtWidgets.QLabel("Select a model above, and press TRAIN MODEL!")
         progress_label.setFont(self.font)
         self.box_text.addWidget(progress_label)
         self.box.setLayout(self.box_text)
 
-        # progress bar and buttons
+        # progress bar and adds buttons to layout
         self.bar = QProgressBar()
         self.bar.setMaximum(100)
         self.b2 = QPushButton("Train Model")
@@ -251,13 +276,14 @@ class MainWindow(QWidget):
         self.button_layout.addWidget(self.canvasButton)
         self.button_layout.addWidget(self.bMnist)
         self.button_layout.addWidget(self.b4)
+        # disables the following two buttons
         self.b3.setEnabled(False)
         self.canvasButton.setEnabled(False)
         self.Vlayout.addWidget(self.box)
         self.Vlayout.addWidget(self.bar)
         self.Vlayout.addLayout(self.button_layout)
     
-        # display the logo of the team
+        # display the team logo repeated
         logo = QtWidgets.QLabel()
         logo.setStyleSheet("QWidget {background-image: url(logo1.jpg)}")
         self.Vlayout.addWidget(logo)
@@ -271,34 +297,39 @@ class MainWindow(QWidget):
         self.b3.clicked.connect(self.test_model)
         self.show()
 
-    # connected to the combox which updates what model is being used
+    # connected to the combobox which updates what model is being used
     def select_model(self,i):
         global model_choice
-        model_choice = self.cb.itemData(i)
-        self.b2.setEnabled(True)
-        self.canvasButton.setEnabled(False)
+        model_choice = self.cb.itemData(i) # extracts value from combobox
+        self.b2.setEnabled(True) # enables train button 
+        self.b3.setEnabled(False) # disables test button
+        self.canvasButton.setEnabled(False) # disables canvas button
         self.clear()
-        self.clear()
-        model_name = self.cb.itemText(i)
+        # clears it a second time in case a QThread is running as it will output a new text in the text_box
+        # this happens as clear() terminates a QThread if it's running, leading to the thread emitting a 
+        # finished signal which is connected to a different function
+        self.clear() 
+        model_name = self.cb.itemText(i) # extracts text from combobox selection
         newText = "You have selected the " + model_name + \
         " model. Press the TRAIN MODEL button below to continue."
         newModel = QLabel(newText)
         newModel.setFont(self.font)
-        newModel.setWordWrap(True)
+        newModel.setWordWrap(True) # wraps text to next line to fit window
         self.box_text.addWidget(newModel)
     
     # connected to the train model button, calls train() function from model.py
     def train_model(self):
-        self.b2.setEnabled(False)
+        self.b2.setEnabled(False) # diables train button
         label_train = QtWidgets.QLabel("Training the Model... meanwhile, see examples of MNIST below.")
         label_train.setFont(self.font)
         self.box_text.addWidget(label_train)
         self.box.setLayout(self.box_text)
         self.train_thread.task_fin.connect(self.setValue)
-        self.train_thread.start()
-        self.train_thread.finished.connect(self.updateTrain)
+        self.train_thread.start() # starts training QThread
+        self.train_thread.finished.connect(self.updateTrain) # connects train QThread ending to function
         
     def setValue(self, value):
+        # sets progress bar to signal value emitted by QThread
         self.bar.setValue(value)
 
     # once training is complete, this function performs updates to the GUI like disabling the TRAIN button
@@ -307,33 +338,30 @@ class MainWindow(QWidget):
         label_train_cmp.setFont(self.font)
         self.box_text.addWidget(label_train_cmp)
         self.box.setLayout(self.box_text)
-        self.b3.setEnabled(True)
+        self.b3.setEnabled(True) # enables test button
     
-    # Connected to the train model button
+    # Connected to the test model button
     def test_model(self):
         label_test = QtWidgets.QLabel("Testing the Model...")
         label_test.setFont(self.font)
         self.box_text.addWidget(label_test)
         self.box.setLayout(self.box_text)
         self.test_thread.task_fin.connect(self.setValue)
-        self.test_thread.start()
-        self.test_thread.finished.connect(self.updateTest)
+        self.test_thread.start() # starts testing QThread
+        self.test_thread.finished.connect(self.updateTest) # connects test QThread ending to function
 
     # updates made to the GUI once testing is complete
     def updateTest(self):
         global Accuracy1
+        # printing accuracy of model
         label_test_cmp = QLabel("Testing complete. Model Accuracy: %0.2f%% " % Accuracy1)
         label_test_cmp.setFont(self.font)
         self.box_text.addWidget(label_test_cmp)
         self.box.setLayout(self.box_text)
+        # disables train and test button, enables canvas button
         self.b2.setEnabled(False)
         self.b3.setEnabled(False)
         self.canvasButton.setEnabled(True)
-        # self.button_layout.itemAt(0).widget().deleteLater()
-        # self.button_layout.itemAt(1).widget().deleteLater()
-        # self.b5 = QPushButton("Drawing Canvas")
-        # self.b5.clicked.connect(self.drawingButton)
-        # self.button_layout.insertWidget(0,self.b5)
 
     # new button to link to the next window, the drawing canvas
     def drawingButton(self):
@@ -343,52 +371,61 @@ class MainWindow(QWidget):
     # connected to the view MNIST examples button
     def viewExample(self):
         self.exampleWin = MNISTImages()
-        self.exampleWin.initExample()
+        self.exampleWin.initExample() # opens new window with examples
 
     def clear(self):
+        # clearing all text in the text_box layout
         for i in range(0,10):
+            # makes sure widget is present before deleting
             if self.box_text.itemAt(i) is not None:
                 self.box_text.itemAt(i).widget().deleteLater()
+        # checks if threads are running and terminates if true
         if self.train_thread.isRunning():
             self.train_thread.terminate()
         if self.test_thread.isRunning():
             self.test_thread.terminate()
+        self.bar.setValue(0)
 
     def clickExit(self):
+        # checks if threads are running and terminates if true
         if self.train_thread.isRunning():
             self.train_thread.terminate()
         if self.test_thread.isRunning():
             self.test_thread.terminate()
-        self.close()
+        self.close() # closes UI
 
 class TrainThread(QThread):
-    task_fin = pyqtSignal(int)
+    # Qthread allows the function to run in the background while the user continues using the UI
+    task_fin = pyqtSignal(int) # int signal emitted from QThread
     def run(self):
         global model_choice
-        self.task_fin.emit(1)
-        for epoch in range(1,2):  # 20 epochs
+        self.task_fin.emit(1) # emits 1% to progress bar to show to user that progress is happening
+        for epoch in range(1,5):  # 20 epochs
             train(epoch = epoch, input = model_choice)
-            time.sleep(0.3)
-            self.task_fin.emit(epoch*5) # progress bar updates in steps of 5%
+            self.task_fin.emit(epoch*20) # progress bar updates in steps of 5%
 
+# global accuracy to be used between classes
 Accuracy1 = 0     
 class TestThread(QThread):
-    task_fin = pyqtSignal(int)
+    # testing QThread for test button
+    task_fin = pyqtSignal(int) # int signal emitted from QThread
     def run(self):
+        # initialising global variables
         global model_choice
         global Accuracy1
         tmp_acc = test(input = model_choice)
-        Accuracy1 = tmp_acc*100
-        time.sleep(0.2)
-        self.task_fin.emit(100)
+        Accuracy1 = tmp_acc*100 # gets accuracy of model in a % form
+        self.task_fin.emit(100) # progress bar @100 when testing is complete
 
+# global predicted number variable for use in other classes
 predicted_num = 9999
 class recogThread(QThread):
-    task_fin = pyqtSignal(int)
-
+    task_fin = pyqtSignal(int) # int signal emitted from QThread
     def run(self):
+        # initialising global variables
         global predicted_num
         global model_choice
+        # recognises model using model selected from combobox
         predicted_num, probab = recognize(input=model_choice)
 
 def view_UI():
