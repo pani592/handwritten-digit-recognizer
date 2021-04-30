@@ -182,7 +182,8 @@ class MNISTImages(QWidget):
         text = "Here, you can view examples of what  goes into the Neural Network as it trains. " + \
             "The dataset being used to train is the MNIST dataset, which consists of 60,000 training images and 10,000 testing images. " + \
             "These images have been normalised and scaled to a 28x28 size image, and is passed into the Neural Network. " + \
-            "Pressing the 'Next Set' button shows you another set of 35 random images from the training set, so you can get an idea of the images. "
+            "Pressing the 'Next Set' button shows you another set of 35 random images from the training set, so you can get an idea of the images. " + \
+            "Please wait 1/2 seconds after pressing 'Next Set' for it to load. "
         self.label1 = QLabel(text)
         self.label1.setWordWrap(True)
         self.label1.setFont(self.font)
@@ -413,7 +414,7 @@ class TestThread(QThread):
         # initialising global variables
         global model_choice
         global Accuracy1
-        tmp_acc = test(input = model_choice)
+        tmp_acc, _ = test(input = model_choice)
         Accuracy1 = tmp_acc*100 # gets accuracy of model in a % form
         self.task_fin.emit(100) # progress bar @100 when testing is complete
 

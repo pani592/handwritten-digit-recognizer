@@ -14,6 +14,7 @@ import numpy as np
 import random
 import cv2 as cv
 from skimage.color import rgb2gray
+import pandas as pd
 
 device = 'cuda' if cuda.is_available() else 'cpu' # Run on GPU if available
 
@@ -73,16 +74,13 @@ optimizer_1 = optim.SGD(model_1.parameters(), lr=learning_rate, momentum=0.9)  #
 optimizer_2 = optim.SGD(model_2.parameters(), lr=learning_rate, momentum=0.9)  # optimizer
 
 def train(epoch, input):
-    '''Training the Model'''    
+    '''Trains and saves the Model. Input = 1 means model 1 is chosen, input = 2 means model 2 is chosen'''  
     if input == 1:
         model = model_1
         optimizer = optimizer_1
-        print('model 1 training')
     else: 
         model = model_2
         optimizer = optimizer_2
-        print('model 2 training')
-
     model.train() # set model to train mode
     for batch_idx, (images, labels) in enumerate(train_loader): # iterate through each batch
         images, labels = images.to(device), labels.to(device)   # send to cpu/gpu
@@ -93,22 +91,17 @@ def train(epoch, input):
         optimizer.step() # use optimizer to modify model parameters
         # if batch_idx % 100 == 0:  
         #     print('Train Epoch: {} | Batch Status: {}/{} ({:.0f}%) | Loss: {:.6f}'.format(epoch, batch_idx*len(images), len(train_loader.dataset), 100.*batch_idx/len(train_loader), loss.item()))
-    
     if input == 1:
         torch.save(model, './pytorch_model_1.pth')  # save model with name
     else: 
         torch.save(model, './pytorch_model_2.pth')  # save model with name
 
 def test(input):
-    '''Testing the Model
-        inputs: input - number indicating which model is being tested. Either 1 or 2.'''
+    '''Testing the Model. Input = 1 means model 1 is chosen, input = 2 means model 2 is chosen. Outputs model accuracy and confusion matrix'''
     if input == 1:
         model = model_1
-        print('model 1 being tested')
     else: 
         model = model_2
-        print('model 2 being tested')
-        
     model.eval() # set model to evaluate mode
     test_loss = 0
     correct = 0
@@ -117,14 +110,16 @@ def test(input):
         images, labels = images.to(device), labels.to(device) # cpu or gpu
         predictions = model(images)
         test_loss += criterion(predictions, labels).item() # sum up batch loss
-        pred = predictions.data.max(1, keepdim=True)[1]   # get the index of the max - gives prediction
-        for t, p in zip(labels.view(-1), pred.view(-1)):
-                confusion_matrix[t.long(), p.long()] += 1
-        correct += pred.eq(labels.data.view_as(pred)).cpu().sum()
+        predictions_val = predictions.data.max(1, keepdim=True)[1]   # get the index of the max - gives prediction
+        for t, p in zip(labels.view(-1), predictions_val.view(-1)):
+                confusion_matrix[t.long(), p.long()] += 1   # create confusion matrix to compare results
+        correct += predictions_val.eq(labels.data.view_as(predictions_val)).cpu().sum()
     test_loss /= len(test_loader.dataset)
-    print(len(test_loader.dataset))
-    print(confusion_matrix)
-    return correct/len(test_loader.dataset)
+    # calculate confusion matrix for analysis results, using pandas for legibility over normal np array
+    df = pd.DataFrame(data=confusion_matrix)
+    df.loc['Col_Total']= df.sum(numeric_only=True, axis=0)
+    df.loc[:,'Row_Total'] = df.sum(numeric_only=True, axis=1)
+    return correct/len(test_loader.dataset), df
 
 def show_MNIST_examples():
     '''When called, this function plots and saves 35 random samples from MNIST dataset with its label'''
@@ -152,7 +147,7 @@ def predict(tensor, model):
     return pred, probab
 
 def plot_probabilities(tensor, probab):
-    ''' Function for plotting and saving the handwritten digit and graph of probabilities.'''
+    ''' Function for plotting image of the handwritten digit and probabilities. Tensor - image input to model. Probab - array of probabilities for each class'''
     fig, (ax0,ax1, ax2) = plt.subplots(figsize=(5,4), ncols=3)
     img = cv.imread('digit.jpg')
     ax0.imshow(img) # original image.
@@ -172,13 +167,12 @@ def plot_probabilities(tensor, probab):
     plt.close(fig)
 
 def recognize(input):
+
     ''' This function imports the saved model + image, and makes prediction. Input parameter chooses between the different models'''
     if input == 1:
         model = torch.load('pytorch_model_1.pth') # load model
-        print('drawing with model 1')
     else: 
         model = torch.load('pytorch_model_2.pth') # load model
-        print('drawing with model 2')
 
     img = cv.imread('digit_inv_20x20.jpg') # load image - [20x20x3]
     img = cv.copyMakeBorder(img.copy(), 4, 4, 4, 4, cv.BORDER_CONSTANT) # add padding to make 28x28
@@ -189,3 +183,18 @@ def recognize(input):
     pred, probab = predict(tensor, model) # use model to predict, return prediction and probability array
     plot_probabilities(tensor,probab) # plot images and probability and save to file
     return pred, probab
+
+if __name__ == "__main__":
+    ## if this script is run directly, it trains both model and returns confusion matrix
+    for epoch in range(1,21):  # 20 epochs
+        train(epoch = epoch, input = 1)
+    acc1, conf_matrix1 = test(1)
+    print(acc1)
+    print(conf_matrix1)
+
+    # model 2
+    for epoch in range(1,21):  # 20 epochs
+        train(epoch = epoch, input = 2)
+    acc2, conf_matrix2 = test(2)
+    print(acc2)
+    print(conf_matrix2)
