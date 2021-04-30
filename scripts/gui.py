@@ -324,7 +324,12 @@ class MainWindow(QWidget):
         label_train = QtWidgets.QLabel("Training the Model... meanwhile, see examples of MNIST below.")
         label_train.setFont(self.font)
         self.box_text.addWidget(label_train)
-        self.box.setLayout(self.box_text)
+        # when the user would change the model selected and completed training, the label above
+        # would print multiple times
+        # the loop below was used to fix that 
+        for i in range(3,18):
+            if self.box_text.itemAt(i) is not None:
+                    self.box_text.itemAt(i).widget().deleteLater()
         self.train_thread.task_fin.connect(self.setValue)
         self.train_thread.start() # starts training QThread
         self.train_thread.finished.connect(self.updateTrain) # connects train QThread ending to function
@@ -338,7 +343,6 @@ class MainWindow(QWidget):
         label_train_cmp = QtWidgets.QLabel("Model training complete! Press TEST MODEL to see results.")
         label_train_cmp.setFont(self.font)
         self.box_text.addWidget(label_train_cmp)
-        self.box.setLayout(self.box_text)
         self.b3.setEnabled(True) # enables test button
     
     # Connected to the test model button
@@ -346,7 +350,6 @@ class MainWindow(QWidget):
         label_test = QtWidgets.QLabel("Testing the Model...")
         label_test.setFont(self.font)
         self.box_text.addWidget(label_test)
-        self.box.setLayout(self.box_text)
         self.test_thread.task_fin.connect(self.setValue)
         self.test_thread.start() # starts testing QThread
         self.test_thread.finished.connect(self.updateTest) # connects test QThread ending to function
@@ -358,7 +361,10 @@ class MainWindow(QWidget):
         label_test_cmp = QLabel("Testing complete. Model Accuracy: %0.2f%% " % Accuracy1)
         label_test_cmp.setFont(self.font)
         self.box_text.addWidget(label_test_cmp)
-        self.box.setLayout(self.box_text)
+        # the reason for this loop is the same as in updateTrain()
+        for i in range(5,18):
+            if self.box_text.itemAt(i) is not None:
+                    self.box_text.itemAt(i).widget().deleteLater()
         # disables train and test button, enables canvas button
         self.b2.setEnabled(False)
         self.b3.setEnabled(False)
