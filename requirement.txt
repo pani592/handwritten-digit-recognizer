@@ -1,2 +1,12 @@
 #requirement.txt
-● Specify all the dependencies(libraries and versions) on requirement.txt,
+Python 3.8.8
+• Pytorch 1.8.1
+• Torchvision 0.9.1 
+• Pyqt5 5.15.4 
+• Cudatoolkit 10.2.89 
+• Opencv-python 4.5.1.48 
+• Pillow 8.2.0
+• Scikit-image 0.18.1 
+• Matplotlib 3.3.4 
+• Numpy 1.19.2 
+• Pandas 1.2.4

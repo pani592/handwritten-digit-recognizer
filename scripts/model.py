@@ -1,7 +1,6 @@
-# This file Contains the implementation of a Convolutional Neural Network as well as helper functions for training, testing, 
-# viewing MNIST, show probabilities, and predicting. 
+# This file Contains the implementation of two models, including a Convolutional Neural Network, as well as helper functions for 
+# training, testing, viewing MNIST, show probabilities, and making predictions. 
 # Authors: Paulse Anithottam, Sidharth Varma
-# Last updated: 28 April
 # imports
 from torch import nn, optim, cuda, Tensor
 from torch.utils import data
@@ -23,7 +22,6 @@ input_size = 784 # 28x28 image size
 num_classes = 10 # 10 digits - classes
 num_epochs = 20
 batch_size = 64
-learning_rate = 0.01
 
 # MNIST Dataset - download.
 train_dataset = datasets.MNIST(root='mnist_data/', train=True, transform=transforms.ToTensor(), download=True) # 60000 images
@@ -54,27 +52,33 @@ class Neural_Net_Model(nn.Module):
     ''' Simple Feed Forward Neural Network Model provided in labs'''
     def __init__(self):
         super(Neural_Net_Model, self).__init__()
-        self.l1 = nn.Linear(784, 520)    
+        self.l1 = nn.Linear(784, 520) # 784 input channels since the 28x28 image flattened has size 784
         self.l2 = nn.Linear(520, 320)
         self.l3 = nn.Linear(320, 240)
         self.l4 = nn.Linear(240, 120)
-        self.l5 = nn.Linear(120, 10)
+        self.l5 = nn.Linear(120, 10) # 10 outputs channels for 10 digits
     def forward(self, x):
         x = x.view(-1, 784)  # Flatten the data (n, 1, 28, 28)-> (n, 784)
         x = F.relu(self.l1(x)) 
         x = F.relu(self.l2(x))
         x = F.relu(self.l3(x))
         x = F.relu(self.l4(x))
-        return F.log_softmax(self.l5(x), dim=1)
+        return F.log_softmax(self.l5(x), dim=1) # logsoftmax activation in final layer
 
 model_1 = Conv_Net_Model().to(device) # define an instance of the model
 model_2 = Neural_Net_Model().to(device)
 criterion = nn.CrossEntropyLoss() # loss criterion
-optimizer_1 = optim.SGD(model_1.parameters(), lr=learning_rate, momentum=0.9)  # optimizer
-optimizer_2 = optim.SGD(model_2.parameters(), lr=learning_rate, momentum=0.9)  # optimizer
+optimizer_1 = optim.SGD(model_1.parameters(), lr=0.01, momentum=0.9)  # optimizer
+optimizer_2 = optim.SGD(model_2.parameters(), lr=0.01, momentum=0.9)  # optimizer
 
 def train(epoch, input):
-    '''Trains and saves the Model. Input = 1 means model 1 is chosen, input = 2 means model 2 is chosen'''  
+    '''Trains and saves the Model to files. Input = 1 means model 1 is chosen, input = 2 means model 2 is chosen.
+    Inputs:
+        epoch - current epoch number being run
+        input - value corresponding to model choice
+    Outputs:
+        None (but saves model to file)
+    '''  
     if input == 1:
         model = model_1
         optimizer = optimizer_1
@@ -97,7 +101,13 @@ def train(epoch, input):
         torch.save(model, './pytorch_model_2.pth')  # save model with name
 
 def test(input):
-    '''Testing the Model. Input = 1 means model 1 is chosen, input = 2 means model 2 is chosen. Outputs model accuracy and confusion matrix'''
+    '''Testing the Model to quantify accuracy and calculate confusion matrix.
+    Inputs:
+        input - value corresponding to model choice
+    Outputs:
+        model accuracy
+        conusion matrix
+    '''
     if input == 1:
         model = model_1
     else: 
@@ -122,9 +132,9 @@ def test(input):
     return correct/len(test_loader.dataset), df
 
 def show_MNIST_examples():
-    '''When called, this function plots and saves 35 random samples from MNIST dataset with its label'''
+    '''When called, this function plots and saves to file 35 random samples from the MNIST dataset with its label'''
     fig=plt.figure(figsize=(8,7))
-    randnums = np.random.randint(0,60000,35)
+    randnums = np.random.randint(0,60000,35) # array of length 35 with random numbers in required range
     for i in range(1, 36): # 35 images
         idx = randnums[i-1]
         x, label = train_dataset[idx] # x is a torch.Tensor (image) of size [1,28,28]
@@ -132,22 +142,34 @@ def show_MNIST_examples():
         plt.title('{}'.format(label))
         plt.axis('off')
         plt.imshow(x.numpy().squeeze(), cmap='gray')
-    plt.savefig('mnist_examples.jpg')
+    plt.savefig('mnist_examples.jpg')  # save figure to folder
     plt.close(fig)
 
 def predict(tensor, model):
-    ''' With inputs of a trained model and single image tensor, return the prediction and probability of classification'''
+    ''' Return the prediction and probability of classification of a certain image
+    Inputs:
+        tensor - pytorch tensor containing the digit to be predicted/ identified
+        model - trained model used for evaluation
+    Outputs:
+        pred - prediction / digit output from model with highest probability
+        probab - list of probabilities of each digit output from model 
+    '''
     model.eval() # set model to evaluate mode
     tensor = tensor.to(device)
     with torch.no_grad(): # recommended for speed
         prediction = model(tensor.float())
-    probab = list(torch.exp(prediction).data.cpu().numpy()[0])
-    pred = probab.index(max(probab))
+    probab = list(torch.exp(prediction).data.cpu().numpy()[0]) # list of probabilities for each class
+    pred = probab.index(max(probab)) # class with max probability is the predicted value
     # pred = prediction.data.cpu().numpy().argmax() # another equivalent way
     return pred, probab
 
 def plot_probabilities(tensor, probab):
-    ''' Function for plotting image of the handwritten digit and probabilities. Tensor - image input to model. Probab - array of probabilities for each class'''
+    ''' Function for plotting image of the handwritten digit and probabilities. Tensor - image input to model. Probab - array of probabilities for each class
+    Inputs:
+        tensor - tensor containing image data, which was input into the model for prediction
+        probab - array of probabilities for each digit
+    Returns: None ( but the figure is saved to file)
+    '''
     fig, (ax0,ax1, ax2) = plt.subplots(figsize=(5,4), ncols=3)
     img = cv.imread('digit.jpg')
     ax0.imshow(img) # original image.
@@ -163,12 +185,17 @@ def plot_probabilities(tensor, probab):
     ax2.set_title('Probability')
     ax2.set_xlim(0, 1.1)
     plt.tight_layout()
-    plt.savefig('class_prob.jpg')
+    plt.savefig('class_prob.jpg') # save plot to folder
     plt.close(fig)
 
 def recognize(input):
-
-    ''' This function imports the saved model + image, and makes prediction. Input parameter chooses between the different models'''
+    ''' This function imports the saved model + image, and calls predict() function, after some image manipulation including padding. 
+    Inputs: 
+        input - type int, either 1 or 0, corresponding to the model choice
+    Outputs:
+        pred - predicted digit returned from the model
+        probab - array with probabilities for each digit returned from the model
+    '''
     if input == 1:
         model = torch.load('pytorch_model_1.pth') # load model
     else: 
@@ -185,7 +212,7 @@ def recognize(input):
     return pred, probab
 
 if __name__ == "__main__":
-    ## if this script is run directly, it trains both model and returns confusion matrix
+    ## if this script is run directly, it trains both models and returns the confusion matrix for each
     for epoch in range(1,21):  # 20 epochs
         train(epoch = epoch, input = 1)
     acc1, conf_matrix1 = test(1)

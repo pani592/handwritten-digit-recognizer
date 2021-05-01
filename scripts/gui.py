@@ -1,7 +1,5 @@
 # This file Contains Class definitions and functions for instantiating the GUI for the software system. 
 # Authors: Paulse Anithottam, Sidharth Varma
-# Last updated: 28 April
-
 # imports
 from model import *
 import sys
@@ -407,9 +405,9 @@ class TrainThread(QThread):
     def run(self):
         global model_choice
         self.task_fin.emit(1) # emits 1% to progress bar to show to user that progress is happening
-        for epoch in range(1,5):  # 20 epochs
+        for epoch in range(1,21):  # 20 epochs
             train(epoch = epoch, input = model_choice)
-            self.task_fin.emit(epoch*20) # progress bar updates in steps of 5%
+            self.task_fin.emit(epoch*5) # progress bar updates in steps of 5%
 
 # global accuracy to be used between classes
 Accuracy1 = 0     
