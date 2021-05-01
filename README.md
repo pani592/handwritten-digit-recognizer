@@ -6,16 +6,16 @@ With the prevalence of artificial intelligence in so many aspects of life, the i
 
 ## Usage
 
-Simply run main.py inside the scripts folder to access the interface. The screenshots below show some of the key functionalities
+Simply run main.py inside the scripts folder to access the interface. The screenshots below show some of the key functionalities.
 
-![Main Window](scripts/main_window.jpg)
+Main Window:
+<img width="500" alt="Main Window" src="scripts/main_window.jpg">
 
-![MNIST Examples](scripts/window_2.jpg)
+Displaying MNIST Examples:
+<img width="500" alt="MNIST Examples" src="scripts/window_2.jpg">
 
+Drawing Canvas and Prediction:
 ![Drawing Canvas](scripts/drawing_gif.gif)
-
-
-```
 
 ## Getting Started
 
@@ -23,7 +23,7 @@ Simply run main.py inside the scripts folder to access the interface. The screen
 
 * [Pytorch](https://pytorch.org/) - The machine learning library used to implement the model
 * [Pyqt5 ](https://maven.apache.org/) - Python GUI implementation
-* Other helper libraries also used include: Matplotlib, Numpy, Opencv, Pillow, Scikit-image, Torchvision
+* Other helper libraries also used include: Matplotlib, Numpy, Opencv, Pillow, Scikit-image, Torchvision, Pandas
 
 These libraries can be easily installed using conda or pip. For example,
 ```
