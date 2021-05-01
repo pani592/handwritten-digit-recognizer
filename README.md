@@ -9,17 +9,23 @@ With the prevalence of artificial intelligence in so many aspects of life, the i
 Simply run main.py inside the scripts folder to access the interface. The screenshots below show some of the key functionalities.
 
 Main Window:
+The main window is shown below. You can select different models, train the model and see the progress, then test the model and see the accuracy. While the training process occurs you can view examples from the training dataset of MNIST image. The buttons become available to press at the end of each stage. The canvas button leads to the main canvas window.
+
 <img width="500" alt="Main Window" src="scripts/main_window.jpg">
 
-Displaying MNIST Examples:
+Displaying MNIST Examples: Here you can view different examples of the MNIST dataset which is used for training, while training continues in the background.
+
 <img width="500" alt="MNIST Examples" src="scripts/window_2.jpg">
 
-Drawing Canvas and Prediction:
+Drawing Canvas and Prediction: See the interface at use below. Image processing techniques ensure that all size digits are accurately predicting, and the prediction is incredibly fast and accurate, presenting useful information such as the image, transformed tensor, and probabilities.
+
 ![Drawing Canvas](scripts/drawing_gif.gif)
 
 ## Getting Started
 
 ### Prerequisites
+
+The main libraries used to create this project are listed below.
 
 * [Pytorch](https://pytorch.org/) - The machine learning library used to implement the model
 * [Pyqt5 ](https://pypi.org/project/PyQt5/) - Python GUI implementation
