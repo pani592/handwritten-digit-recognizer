@@ -22,7 +22,7 @@ Drawing Canvas and Prediction:
 ### Prerequisites
 
 * [Pytorch](https://pytorch.org/) - The machine learning library used to implement the model
-* [Pyqt5 ](https://maven.apache.org/) - Python GUI implementation
+* [Pyqt5 ](https://pypi.org/project/PyQt5/) - Python GUI implementation
 * Other helper libraries also used include: Matplotlib, Numpy, Opencv, Pillow, Scikit-image, Torchvision, Pandas
 
 These libraries can be easily installed using conda or pip. For example,
